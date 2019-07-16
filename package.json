@@ -35,6 +35,7 @@
 				"remark-behead": "^2.2.1",
 				"remark-parse": "^6.0.3",
 				"remark-stringify": "^6.0.4",
+				"serverless-offline-sts": "^2.0.0",
 				"unified": "^8.1.0",
 				"unified-stream": "^1.0.5",
 				"unist-builder": "^1.0.4",

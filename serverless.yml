@@ -125,6 +125,7 @@ plugins:
     - serverless-offline-kinesis
     - serverless-offline
     - serverless-prune-plugin
+    - serverless-offline-sts
 
 package:
     exclude:
