@@ -8,11 +8,20 @@ See a sample of the format/content of the RUNBOOK.md file [here](./docs/example.
 
 ![image](https://user-images.githubusercontent.com/447559/58543123-b62f4580-81f6-11e9-8f9b-7d694d159e85.png)
 
-## Local environment
+## Installation and Development
+
+Make is the general task runner
+
+-   `make install` to install dependencies and add linting config files
+-   `make env` to fetch environment vars from Vault
+-   You need to download docker from https://docs.docker.com/ and make sure it's running
+-   `make run` will run the app which you can then visit at http://localhost:3000/runbook.md
+-   `make test` will run mocha unit tests
+-   `make lint` will run eslint, using prettier
 
 ## Send record to kinesis stream
 
-In Makefile the run task set up the offline kinesis environment and create the stream called `change-request-api-test-enriched-stream`.  
+In Makefile the run task set up the offline kinesis environment and create the stream called `change-request-api-test-enriched-stream`.
 If you want to put a record on the stream you can run the following command.
 
 ```bash
