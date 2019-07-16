@@ -102,7 +102,7 @@ functions:
             - stream:
                   type: kinesis
                   batchSize: 100
-                  arn: ${self:custom.${env.ENVIRONMENT}.changeApiStreamARN}
+                  arn: ${self:custom.${env:ENVIRONMENT}.changeApiStreamARN}
                   startingPosition: TRIM_HORIZON
                   enabled: true
     status:
