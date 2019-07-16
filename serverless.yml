@@ -98,7 +98,7 @@ functions:
             - stream:
                   type: kinesis
                   batchSize: 100
-                  arn: arn:aws:kinesis:eu-west-1:510688331160:stream/change-request-api-test-enriched-stream
+                  arn: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-test-enriched-stream
                   startingPosition: TRIM_HORIZON
                   enabled: true
     status:
