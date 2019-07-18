@@ -12,7 +12,7 @@ const payload = {
 	systemCode: 'system-code',
 	writeToBizOps: false,
 	bizOpsApiKey: 'dummyKey',
-	content: '# this is a name',
+	content: '# this is a name\ndescription\n## service tier\nbronze',
 };
 
 describe('ingest command', () => {

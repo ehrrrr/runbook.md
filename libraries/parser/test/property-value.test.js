@@ -135,7 +135,7 @@ test('properties with hasMany turn bulleted lists into arrays', async () => {
 
 		* ft-app-fruitcake
 
-		## dependents
+		## replaces
 
 		* ft-app-fruitcake
 		* apple-quicktime
@@ -144,7 +144,28 @@ test('properties with hasMany turn bulleted lists into arrays', async () => {
 	expect(errors).toHaveLength(0);
 	expect(data.knownAboutBy).toEqual(['chee.rabbits']);
 	expect(data.dependencies).toEqual(['ft-app-fruitcake']);
-	expect(data.dependents).toEqual(['ft-app-fruitcake', 'apple-quicktime']);
+	expect(data.replaces).toEqual(['ft-app-fruitcake', 'apple-quicktime']);
+});
+
+test('dependents is banned', async () => {
+	const { data, errors } = await parser.parseRunbookString(here`
+		# name
+
+		## known about by
+
+		* chee.rabbits
+
+		## dependents
+
+		* ft-app-fruitcake
+	`);
+
+	expect(errors).toHaveLength(1);
+	expect(data.knownAboutBy).toEqual(['chee.rabbits']);
+	const [{ message }] = errors;
+	expect(message).toEqual(
+		'dependents is not permitted within runbook.md (to allow other people to edit it)',
+	);
 });
 
 test('properties with hasMany must be bulleted lists', async () => {
@@ -194,7 +215,23 @@ test('subdocuments have their headers reduced two levels', async () => {
 	});
 });
 
-test('date fields are coerced to iso strings', async () => {
+test('last review date is banned', async () => {
+	const { errors } = await parser.parseRunbookString(here`
+		# name
+
+		## last review date
+
+		July 21 2018
+	`);
+
+	expect(errors).toHaveLength(1);
+	const [{ message }] = errors;
+	expect(message).toEqual(
+		'lastServiceReviewDate is not permitted within runbook.md (to allow other people to edit it)',
+	);
+});
+// There are currently no date fields permitted in runbook.md; lastServiceReviewDate is reserved for Ops manual entry
+test.skip('date fields are coerced to iso strings', async () => {
 	const naiveJavaScriptIsoStringRegex = /^\d{4}(?:-\d{2}){2}T(?:\d{2}:){2}\d{2}\.\d{3}Z$/;
 	const { data } = await parser.parseRunbookString(here`
 		# name
@@ -207,7 +244,7 @@ test('date fields are coerced to iso strings', async () => {
 	expect(data.lastServiceReviewDate).toMatch(naiveJavaScriptIsoStringRegex);
 });
 
-test('date fields keep the correct date', async () => {
+test.skip('date fields keep the correct date', async () => {
 	const { data } = await parser.parseRunbookString(here`
 		# name
 

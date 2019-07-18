@@ -12,7 +12,7 @@ module.exports = function setBizopsPropertyNames({ systemProperties }) {
 		if (!property) {
 			convertNodeToProblem({
 				node,
-				message: `i couldn't resolve ${node.value} to a property name`,
+				message: `i couldn't resolve ${node.key} to a property name`,
 			});
 			return;
 		}
