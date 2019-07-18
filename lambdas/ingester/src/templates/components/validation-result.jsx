@@ -1,4 +1,5 @@
 const { h, Fragment } = require('hyperons');
+const { ScoreTile } = require('./score-tile');
 
 const {
 	Message,
@@ -13,6 +14,7 @@ const { BIZ_OPS_URL } = process.env;
 exports.ValidationResult = ({
 	status,
 	alertState,
+	weightedScore,
 	writeToBizOps,
 	systemCode,
 	message,
@@ -32,6 +34,11 @@ exports.ValidationResult = ({
 				</p>
 			</aside>
 		)}
+		<div className="o-grid-row fullwidth with-margin-bottom">
+			<div data-o-grid-colspan="12">
+				<ScoreTile value={weightedScore} />
+			</div>
+		</div>
 		<div className="o-grid-row fullwidth with-margin-bottom">
 			<div data-o-grid-colspan="12">
 				{message && message.length > 0 && (

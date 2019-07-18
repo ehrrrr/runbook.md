@@ -13,6 +13,7 @@ const StatusPage = ({
 	commitUrl,
 	runbookUrl,
 	content,
+	weightedScore,
 	parseData = {},
 	parseErrors = [],
 	validationErrors = {},
@@ -41,6 +42,7 @@ const StatusPage = ({
 				parseErrors={parseErrors}
 				validationErrors={validationErrors}
 				updatedFields={updatedFields}
+				weightedScore={Number(weightedScore).toFixed(1)}
 			/>
 			<h2 id="runbook-input">RUNBOOK.MD Content</h2>
 			<div className="o-grid-row fullwidth with-margin-bottom">

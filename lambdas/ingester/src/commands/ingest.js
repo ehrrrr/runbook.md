@@ -14,7 +14,7 @@ const transformIngestedDetails = (
 	...(validationResult && {
 		validationErrors: validationResult.errorMessages,
 		validationData: validationResult.percentages,
-		weightedScore: validationResult.weightedScore,
+		weightedScore: Number(validationResult.weightedScore).toFixed(1),
 	}),
 	...(writeResult && { updatedFields: writeResult }),
 });

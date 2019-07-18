@@ -22,6 +22,7 @@ const ValidateForm = ({
 	parseErrors = [],
 	validationErrors = {},
 	updatedFields = {},
+	weightedScore,
 }) => (
 	<Fragment>
 		<div className="o-layout__sidebar" />
@@ -42,6 +43,7 @@ const ValidateForm = ({
 					parseErrors={parseErrors}
 					validationErrors={validationErrors}
 					updatedFields={updatedFields}
+					weightedScore={weightedScore}
 				/>
 			)}
 			<h2 id="runbook-input">Runbook Content</h2>
