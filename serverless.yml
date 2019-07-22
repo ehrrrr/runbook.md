@@ -32,10 +32,7 @@ provider:
         GITHUB_WEBHOOK_SECRET: ${env:GITHUB_WEBHOOK_SECRET}
 
 custom:
-    prod:
-        changeApiStreamARN: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-enriched-stream
-    test:
-        changeApiStreamARN: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-test-enriched-stream
+
     alerts:
         topics:
             ok: arn:aws:sns:${self:provider.region}:${env:AWS_ACCOUNT_ID}:cloudwatch-alarms
@@ -102,7 +99,7 @@ functions:
             - stream:
                   type: kinesis
                   batchSize: 100
-                  arn: ${self:custom.${env:ENVIRONMENT}.changeApiStreamARN}
+                  arn: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-${env:ENVIRONMENT}-enriched-stream
                   startingPosition: TRIM_HORIZON
                   enabled: true
     status:
