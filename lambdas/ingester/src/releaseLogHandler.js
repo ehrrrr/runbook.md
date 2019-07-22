@@ -248,5 +248,5 @@ const handler = async (event, context) => {
 };
 
 module.exports = {
-	handler: createLambda(handler),
+	handler: createLambda(handler, { requireS3o: false }),
 };
