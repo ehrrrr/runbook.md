@@ -185,7 +185,7 @@ const command = async context => {
 		...{
 			success: {
 				description: ingestResult.details
-					? `Runbook score: ${(
+					? `Runbook score: ${Number(
 							ingestResult.details.weightedScore || 0
 					  ).toFixed(1)}%`
 					: 'Runbook is valid',
