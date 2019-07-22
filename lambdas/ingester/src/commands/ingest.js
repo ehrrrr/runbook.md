@@ -1,3 +1,4 @@
+const stripHtmlComments = require('strip-html-comments');
 const runbookMd = require('../lib/parser');
 const { validate, updateBizOps } = require('../lib/external-apis');
 const { transformCodesIntoNestedData } = require('../lib/code-validation');
@@ -26,10 +27,16 @@ const decorateError = props => {
 };
 
 const ingest = async (username, payload) => {
-	const { content, writeToBizOps, systemCode, bizOpsApiKey } = payload;
-	if (!content) {
+	const {
+		content: rawRunbook,
+		writeToBizOps,
+		systemCode,
+		bizOpsApiKey,
+	} = payload;
+	if (!rawRunbook) {
 		throw decorateError({ message: 'Please supply RUNBOOK.md content' });
 	}
+	const content = stripHtmlComments(rawRunbook);
 	// parse RUNBOOK.MD to JSON to return {data, errors}
 	const parseResult = await runbookMd.parseRunbookString(content);
 	// validate codes in JSON against the Biz Ops to return {expandedData, errors}
