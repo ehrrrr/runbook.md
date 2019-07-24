@@ -191,7 +191,8 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 
 					// the gitRefUrl can tell us whether we have a PR on our hands...
 					// https://github.com/Financial-Times/next-api/pull/474
-					const [, prNumber] = gitRefUrl.match(/\/pull\/(\d+)$/) || [];
+					const [, prNumber] =
+						gitRefUrl.match(/\/pull\/(\d+)$/) || [];
 
 					let runbookContent;
 
