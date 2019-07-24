@@ -169,14 +169,29 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				eventId,
 			}) => {
 				const fetchRunbookLogger = childLogger.child({ eventId });
+				let repository = 'UNKNOWN';
 				try {
+					if (!gitRefUrl) {
+						throw new Error(
+							'No github data associated with the ChangeAPI event',
+						);
+					}
+
 					const [gitRepositoryName] = gitRefUrl
 						.replace('https://github.com/', '')
 						.match(/[\w-]+\/[\w-]+/);
 
+					if (!gitRepositoryName) {
+						throw new Error(
+							`Github data (htmlUrl) associated with the event is invalid: ${gitRefUrl}`,
+						);
+					}
+
+					repository = gitRepositoryName;
+
 					// the gitRefUrl can tell us whether we have a PR on our hands...
 					// https://github.com/Financial-Times/next-api/pull/474
-					const [, prNumber] = gitRefUrl.match(/\/pull\/(\d+)$/);
+					const [, prNumber] = gitRefUrl.match(/\/pull\/(\d+)$/) || [];
 
 					let runbookContent;
 
@@ -206,6 +221,7 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 						{
 							event,
 							error,
+							repository,
 						},
 						'Retrieving runbook.md from GithubApi has failed',
 					);
