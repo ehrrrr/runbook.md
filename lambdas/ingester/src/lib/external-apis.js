@@ -26,6 +26,8 @@ const callExternalApi = async ({
 			`Attempt to access ${name} ${url} failed with ${fetchResponse.statusText}`,
 		);
 	}
+	// mustn't log confidential runbook data and PII...
+	delete options.body;
 	logger.info(
 		{ event: `POSTED to ${url}`, options },
 		`Waiting for ${name} response`,
