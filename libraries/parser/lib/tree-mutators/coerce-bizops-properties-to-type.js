@@ -96,7 +96,7 @@ module.exports = function coerceBizopsPropertiesToType({
 			} else {
 				convertNodeToProblem({
 					node,
-					message: `${flattenedContent} is not a valid value for the enum ${enumName}`,
+					message: `${flattenedContent} is not a valid value for the enum ${enumName}. Valid values: ${validValues.toString()}`,
 				});
 			}
 
