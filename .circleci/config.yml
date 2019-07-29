@@ -96,7 +96,7 @@ jobs:
 
             - deploy:
                   name: Serverless deploy test.
-                  command: bash .circleci/do-exclusively.sh --branch $CIRCLE_BRANCH --job release_test make deploy
+                  command: bash ./node_modules/@financial-times/rel-engage/packages/circleci/do-exclusively.sh --branch $CIRCLE_BRANCH --job release_test make deploy
                   environment:
                       NODE_ENV: production
 
@@ -109,7 +109,7 @@ jobs:
 
             - deploy:
                   name: Serverless deploy prod
-                  command: bash .circleci/do-exclusively.sh --tag $CIRCLE_TAG --job release_prod make deploy
+                  command: bash ./node_modules/@financial-times/rel-engage/packages/circleci/do-exclusively.sh --tag $CIRCLE_TAG --job release_prod make deploy
                   environment:
                       NODE_ENV: production
 
