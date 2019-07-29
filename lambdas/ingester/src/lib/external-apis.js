@@ -2,6 +2,8 @@ const logger = require('@financial-times/lambda-logger');
 const httpError = require('http-errors');
 const nodeFetch = require('isomorphic-fetch');
 
+const API_KEY_HEADER_NAME = 'x-api-key';
+
 const callExternalApi = async ({
 	name,
 	method,
@@ -29,7 +31,7 @@ const callExternalApi = async ({
 	// must not log confidential runbook data and PII...
 	delete options.body;
 	if (options.headers) {
-		delete options.headers['x-api-key'];
+		delete options.headers[API_KEY_HEADER_NAME];
 	}
 	logger.info(
 		{ event: `POSTED to ${url}`, options },
@@ -72,7 +74,7 @@ const updateBizOps = async (username, apiKey, systemCode, content) => {
 		url: `${process.env.BIZ_OPS_API_URL}/v2/node/System/${systemCode}${queryString}`,
 		payload: content,
 		headers: {
-			'x-api-key': apiKey,
+			[API_KEY_HEADER_NAME]: apiKey,
 			'client-id': 'biz-ops-runbook-md',
 			'content-type': 'application/json',
 			'client-user-id': username,
@@ -88,7 +90,7 @@ const queryBizOps = async (username, apiKey, query) => {
 		url: `${process.env.BIZ_OPS_API_URL}/graphql`,
 		payload: { query },
 		headers: {
-			'x-api-key': apiKey,
+			[API_KEY_HEADER_NAME]: apiKey,
 			'client-id': 'biz-ops-runbook-md',
 			'content-type': 'application/json',
 			'client-user-id': username,
