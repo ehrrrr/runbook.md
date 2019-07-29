@@ -28,7 +28,9 @@ const callExternalApi = async ({
 	}
 	// must not log confidential runbook data and PII...
 	delete options.body;
-	delete options.headers['x-api-key'];
+	if (options.headers) {
+		delete options.headers['x-api-key'];
+	}
 	logger.info(
 		{ event: `POSTED to ${url}`, options },
 		`Waiting for ${name} response`,
