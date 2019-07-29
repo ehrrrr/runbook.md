@@ -54,7 +54,7 @@ const parseRecord = childLogger => record => {
 
 	if (!commit) {
 		parseRecordLogger.error(
-			{ event: 'INSUFFICIENT_DATA' },
+			{ event: 'INSUFFICIENT_DATA', payload, },
 			'Event did not contain commit',
 		);
 		return;
