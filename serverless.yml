@@ -130,6 +130,7 @@ plugins:
     - serverless-offline-sts
 
 package:
+    individually: true
     exclude:
         - certs/**
         - coverage/**

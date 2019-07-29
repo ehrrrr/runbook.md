@@ -29,6 +29,8 @@ const sls = {
 				use: {
 					loader: 'babel-loader',
 					options: {
+						babelrc: false,
+						comments: false,
 						presets: [
 							[
 								'@babel/preset-env',
@@ -40,6 +42,7 @@ const sls = {
 							],
 						],
 						plugins: [
+							'source-map-support',
 							[
 								'@babel/plugin-transform-react-jsx',
 								{
