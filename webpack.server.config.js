@@ -38,6 +38,7 @@ const sls = {
 									targets: {
 										node: true,
 									},
+									modules: 'commonjs',
 								},
 							],
 						],
