@@ -177,9 +177,10 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 						);
 					}
 
-					const [gitRepositoryName] = gitRefUrl
-						.replace('https://github.com/', '')
-						.match(/[\w-]+\/[\w-]+/);
+					const [gitRepositoryName] =
+						gitRefUrl
+							.replace('https://github.com/', '')
+							.match(/[\w-]+\/[\w-]+/) || [];
 
 					if (!gitRepositoryName) {
 						throw new Error(
