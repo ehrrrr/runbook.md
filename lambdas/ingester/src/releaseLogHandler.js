@@ -66,69 +66,100 @@ const parseRecord = childLogger => record => {
 	};
 };
 
-const githubAPI = (path, { previewMode, ...options } = {}) => {
+const createGithubAPIClient = (log = logger) => async (
+	path,
+	{ previewMode, ...options } = {},
+) => {
 	const url = `${githubApiUrl}${path.replace(githubApiUrl, '')}`;
-	// The associated PRs endpoint on Commit API is currently in developer preview,
-	// so we must provide a custom media type in the Accept header:
-	const additionalHeaders = previewMode
-		? { Accept: 'application/vnd.github.groot-preview+json' }
-		: {};
-	return fetch(url, {
+	const requestOptions = {
 		...options,
 		headers: {
 			Authorization: `token ${process.env.GITHUB_AUTH_TOKEN}`,
-			...additionalHeaders,
+			// The associated PRs endpoint on Commit API is currently in developer preview,
+			// so we must provide a custom media type in the Accept header:
+			...(previewMode
+				? { Accept: 'application/vnd.github.groot-preview+json' }
+				: {}),
 		},
-	});
-};
+	};
+	const response = await fetch(url, requestOptions);
 
-const getRunbookUrlFromModifiedFiles = files => {
-	const firstRunbookFound = files.find(({ filename }) =>
-		/runbook\.md$/i.test(filename),
-	);
-	const { contents_url: runbookUrl } = firstRunbookFound || {};
-	return runbookUrl;
-};
+	if (!response.ok) {
+		const contentType = response.headers.get('content-type');
+		const body = await (contentType &&
+		contentType.includes('application/json')
+			? response.json()
+			: response.text());
 
-const getRunbookIfModified = async (prNumber, gitRepositoryName) => {
-	const path = `/repos/${gitRepositoryName}/pulls/${prNumber}/files`;
-	const rawResponse = await githubAPI(path);
-	const modifiedFiles = await rawResponse.json();
-	return getRunbookUrlFromModifiedFiles(modifiedFiles);
-};
-
-const getRunbookContent = async contentUrl => {
-	const response = await githubAPI(contentUrl);
-	const { content } = await response.json();
-	return decodeBase64(content);
-};
-
-const getRunbookFromUrl = url => url && getRunbookContent(url);
-
-const getRunbookFromPR = async (commit, gitRepositoryName, prNumber) => {
-	if (!prNumber) {
-		const path = `/repos/${gitRepositoryName}/commits/${commit}/pulls`;
-		const response = await githubAPI(path, {
-			// Listing branches or pull requests for a commit in the Commits API
-			// is currently in developer preview
-			// 'https://developer.github.com/v3/repos/commits/#list-pull-requests-associated-with-commit'
-			previewMode: true,
+		requestOptions.headers.Authorization = `token: <redacted>`;
+		log.error({
+			event: 'GITHUB_API_FAILURE',
+			url,
+			requestOptions,
+			body,
+			statusCode: response.status,
 		});
-		const [prData = {}] = await response.json();
-		prNumber = prData.number;
+		throw new Error(
+			`Github API call returned status code ${response.status}`,
+		);
 	}
-	const runbookContentUrl =
-		prNumber && (await getRunbookIfModified(prNumber, gitRepositoryName));
-	return getRunbookFromUrl(runbookContentUrl);
+
+	return response.json();
 };
 
-const getRunbookFromCommit = async (commit, gitRepositoryName) => {
-	const path = `/repos/${gitRepositoryName}/commits/${commit}`;
-	const response = await githubAPI(path);
-	const { files } = await response.json();
-	const runbookContentUrl = files && getRunbookUrlFromModifiedFiles(files);
-	return getRunbookFromUrl(runbookContentUrl);
-};
+class RunbookSource {
+	constructor({ logger: log = logger, githubAPI } = {}) {
+		this.logger = log;
+		this.githubAPI = githubAPI;
+	}
+
+	getRunbookUrlFromModifiedFiles(files) {
+		const firstRunbookFound = files.find(({ filename }) =>
+			/runbook\.md$/i.test(filename),
+		);
+		const { contents_url: runbookUrl } = firstRunbookFound || {};
+		return runbookUrl;
+	}
+
+	async getRunbookIfModified(prNumber, gitRepositoryName) {
+		const path = `/repos/${gitRepositoryName}/pulls/${prNumber}/files`;
+		const modifiedFiles = await this.githubAPI(path);
+		return this.getRunbookUrlFromModifiedFiles(modifiedFiles);
+	}
+
+	async getRunbookFromUrl(contentUrl) {
+		if (!contentUrl) {
+			return '';
+		}
+		const { content } = await this.githubAPI(contentUrl);
+		return decodeBase64(content);
+	}
+
+	async getRunbookFromPR(commit, gitRepositoryName, prNumber) {
+		if (!prNumber) {
+			const path = `/repos/${gitRepositoryName}/commits/${commit}/pulls`;
+			const [prData = {}] = await this.githubAPI(path, {
+				// Listing branches or pull requests for a commit in the Commits API
+				// is currently in developer preview
+				// 'https://developer.github.com/v3/repos/commits/#list-pull-requests-associated-with-commit'
+				previewMode: true,
+			});
+			prNumber = prData.number;
+		}
+		const runbookContentUrl =
+			prNumber &&
+			(await this.getRunbookIfModified(prNumber, gitRepositoryName));
+		return this.getRunbookFromUrl(runbookContentUrl);
+	}
+
+	async getRunbookFromCommit(commit, gitRepositoryName) {
+		const path = `/repos/${gitRepositoryName}/commits/${commit}`;
+		const { files } = await this.githubAPI(path);
+		const runbookContentUrl =
+			files && this.getRunbookUrlFromModifiedFiles(files);
+		return this.getRunbookFromUrl(runbookContentUrl);
+	}
+}
 
 const ingestRunbookMDs = (runbookMDs, childLogger) =>
 	Promise.all(
@@ -168,7 +199,13 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				user,
 				eventId,
 			} = record;
+
 			const fetchRunbookLogger = childLogger.child({ eventId });
+			const runbookSource = new RunbookSource({
+				logger: fetchRunbookLogger,
+				githubAPI: createGithubAPIClient(fetchRunbookLogger),
+			});
+
 			let repository = 'UNKNOWN';
 			try {
 				if (!gitRefUrl) {
@@ -197,14 +234,14 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				let runbookContent;
 
 				if (!prNumber) {
-					runbookContent = await getRunbookFromCommit(
+					runbookContent = await runbookSource.getRunbookFromCommit(
 						commit,
 						gitRepositoryName,
 					);
 				}
 
 				if (!runbookContent) {
-					runbookContent = await getRunbookFromPR(
+					runbookContent = await runbookSource.getRunbookFromPR(
 						commit,
 						gitRepositoryName,
 						prNumber,
