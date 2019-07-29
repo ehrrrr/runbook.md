@@ -18,7 +18,7 @@ Make is the general task runner
 -   You also need to ensure AWS CLI is installed https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
 -   `make run` will run the app which you can then visit at http://localhost:3000/runbook.md
 -   `make test` will run mocha unit tests
--   `make lint` will run eslint, using prettier
+-   `make verify` will run eslint, using prettier
 
 ## Send record to kinesis stream
 
