@@ -175,15 +175,26 @@ class RunbookSource {
 const ingestRunbookMDs = (runbookMDs, childLogger) =>
 	Promise.all(
 		runbookMDs
-			.filter(({ content }) => !!content)
+			.filter(({ content, eventID }) => {
+				if (content) {
+					return true;
+				}
+				childLogger.info({
+					event: 'NO_RUNBOOK_CONTENT_FOUND',
+					eventID,
+				});
+				return false;
+			})
 			.map(async ({ user, systemCode, content, eventID }) => {
+				const fetchRunbookLogger = childLogger.child({ eventID });
+
 				try {
 					if (!user) {
 						throw new Error(
 							'Missing FT username when ingesting runbook',
 						);
 					}
-					logger.info({
+					fetchRunbookLogger.info({
 						event: 'INGEST_RUNBOOK_MD_START',
 					});
 
@@ -196,18 +207,17 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 						bizOpsApiKey,
 					});
 
-					logger.info({
+					fetchRunbookLogger.info({
 						event: 'INGEST_RUNBOOK_MD_SUCCESS',
 					});
 					return { ...result, eventID };
 				} catch (error) {
-					childLogger.error(
+					fetchRunbookLogger.error(
 						{
 							event: 'INGEST_RUNBOOK_MD_FAILED',
 							error,
 							user,
 							systemCode,
-							eventID,
 						},
 						`Ingesting runbook has failed for ${systemCode}.`,
 					);
@@ -366,7 +376,7 @@ const handler = async (event, context) => {
 	).filter(filterValidKinesisRecord(childLogger));
 
 	if (parsedRecords.length === 0) {
-		childLogger(
+		childLogger.info(
 			{
 				event: 'SKIPPING_INGEST',
 			},
