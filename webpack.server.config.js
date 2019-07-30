@@ -31,6 +31,7 @@ const sls = {
 					loader: 'babel-loader',
 					options: {
 						comments: false,
+						sourceMaps: 'both',
 					},
 				},
 			},
