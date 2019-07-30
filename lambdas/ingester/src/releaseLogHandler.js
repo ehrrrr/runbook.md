@@ -177,12 +177,18 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 		runbookMDs
 			.filter(({ content }) => !!content)
 			.map(async ({ user, systemCode, content, eventID }) => {
-				logger.info({
-					event: 'INGEST_RUNBOOK_MD_START',
-				});
-
-				const userName = user.split('@')[0];
 				try {
+					if (!user) {
+						throw new Error(
+							'Missing FT username when ingesting runbook',
+						);
+					}
+					logger.info({
+						event: 'INGEST_RUNBOOK_MD_START',
+					});
+
+					const userName = user.split('@')[0];
+
 					const result = await ingest(userName, {
 						systemCode,
 						content,
