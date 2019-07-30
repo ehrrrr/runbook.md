@@ -322,6 +322,7 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 		childLogger.info({
 			event: 'RELEASE_PROCESSING_FAILURE',
 			eventIDs,
+			error,
 		});
 
 		return json(400, {
