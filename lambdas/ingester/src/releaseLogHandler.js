@@ -217,7 +217,7 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				const [gitRepositoryName] =
 					gitRefUrl
 						.replace('https://github.com/', '')
-						.match(/[\w-]+\/[\w-]+/) || [];
+						.match(/[a-z0-9_.-]+\/[a-z0-9_.-]+/i) || [];
 
 				if (!gitRepositoryName) {
 					throw new Error(
