@@ -176,15 +176,16 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 	Promise.all(
 		runbookMDs
 			.filter(({ content }) => !!content)
-			.map(async ({ user, systemCode, content }) => {
+			.map(async ({ user, systemCode, content, eventID }) => {
 				const userName = user.split('@')[0];
 				try {
-					return await ingest(userName, {
+					const result = await ingest(userName, {
 						systemCode,
 						content,
 						writeToBizOps: true,
 						bizOpsApiKey,
 					});
+					return { ...result, eventID };
 				} catch (error) {
 					childLogger.error(
 						{
@@ -192,6 +193,7 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 							error,
 							user,
 							systemCode,
+							eventID,
 						},
 						`Ingesting runbook has failed for ${systemCode}.`,
 					);
@@ -263,12 +265,12 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 					systemCode,
 					content: runbookContent,
 					user: user.email,
+					eventID,
 				};
 			} catch (error) {
-				const event = 'GET_RUNBOOK_CONTENT_FAILED';
 				fetchRunbookLogger.error(
 					{
-						event,
+						event: 'GET_RUNBOOK_CONTENT_FAILED',
 						error,
 						record,
 						repository,
@@ -301,7 +303,10 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 
 		ingestedRunbooks.forEach(response => {
 			if (response.status >= 400) {
-				childLogger.error(response);
+				childLogger.error({
+					...response,
+					event: 'RUNBOOK_INGEST_FAILED',
+				});
 			}
 		});
 
