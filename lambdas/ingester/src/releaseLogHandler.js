@@ -9,16 +9,16 @@ const bizOpsApiKey = process.env.BIZ_OPS_API_KEY;
 
 const decodeBase64 = string => Buffer.from(string, 'base64').toString('utf8');
 
-const parseRecord = childLogger => record => {
+const parseKinesisRecord = childLogger => record => {
 	const RECEIVED_CHANGE_API_RECORD = 'RECEIVED_CHANGE_API_RECORD';
-	const { eventSource, eventId, kinesis: { data } = {} } = record;
+	const { eventSource, eventID, kinesis: { data } = {} } = record;
 
-	const parseRecordLogger = childLogger.child({
-		eventId,
+	const log = childLogger.child({
+		eventID,
 	});
 
 	if (eventSource !== 'aws:kinesis') {
-		parseRecordLogger.info(
+		log.info(
 			{
 				event: 'UNRECOGNISED_EVENT_SOURCE',
 				record,
@@ -32,7 +32,7 @@ const parseRecord = childLogger => record => {
 	try {
 		payload = JSON.parse(decodeBase64(data));
 
-		parseRecordLogger.debug(
+		log.debug(
 			{
 				event: RECEIVED_CHANGE_API_RECORD,
 				payload,
@@ -40,7 +40,7 @@ const parseRecord = childLogger => record => {
 			'Received kinesis record',
 		);
 	} catch (error) {
-		parseRecordLogger.error(
+		log.error(
 			{
 				event: RECEIVED_CHANGE_API_RECORD,
 				...error,
@@ -50,20 +50,27 @@ const parseRecord = childLogger => record => {
 		return;
 	}
 
-	const { commit } = payload;
-
-	if (!commit) {
-		parseRecordLogger.error(
-			{ event: 'INSUFFICIENT_DATA', payload },
-			'Event did not contain commit',
-		);
-		return;
-	}
-
 	return {
 		...payload,
-		eventId: record.eventID,
+		eventID: record.eventID,
 	};
+};
+
+const filterValidKinesisRecord = childLogger => record => {
+	const { commit, eventID } = record;
+	const log = childLogger.child({
+		eventID,
+	});
+
+	if (!commit) {
+		log.warn(
+			{ event: 'INSUFFICIENT_DATA', record },
+			'Record did not contain commit',
+		);
+		return false;
+	}
+
+	return !!record.isProdEnv;
 };
 
 const createGithubAPIClient = (log = logger) => async (
@@ -197,10 +204,10 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				systemCode,
 				githubData: { htmlUrl: gitRefUrl },
 				user,
-				eventId,
+				eventID,
 			} = record;
 
-			const fetchRunbookLogger = childLogger.child({ eventId });
+			const fetchRunbookLogger = childLogger.child({ eventID });
 			const runbookSource = new RunbookSource({
 				logger: fetchRunbookLogger,
 				githubAPI: createGithubAPIClient(fetchRunbookLogger),
@@ -305,14 +312,14 @@ const handler = async (event, context) => {
 	const childLogger = logger.child({ awsRequestId: context.awsRequestId });
 	childLogger.info({
 		event: 'RELEASE_TRIGGERED',
-		eventIds: event.Records.map(({ eventID }) => eventID),
+		eventIDs: event.Records.map(({ eventID }) => eventID),
 	});
 
-	const parsedRecords = event.Records.map(parseRecord(childLogger)).filter(
-		payload => payload && !!payload.isProdEnv,
-	);
+	const parsedRecords = event.Records.map(
+		parseKinesisRecord(childLogger),
+	).filter(filterValidKinesisRecord(childLogger));
 
-	parsedRecords.forEach(({ commit, systemCode, user, eventId }) => {
+	parsedRecords.forEach(({ commit, systemCode, user, eventID }) => {
 		childLogger.info(
 			{
 				event: 'BEGIN_PROCESSING_RELEASE_RECORD',
@@ -320,7 +327,7 @@ const handler = async (event, context) => {
 					commit,
 					systemCode,
 					user,
-					eventId,
+					eventID,
 				},
 			},
 			'Began processing record',
