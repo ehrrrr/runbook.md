@@ -1,6 +1,9 @@
 const logger = require('@financial-times/lambda-logger');
 const httpError = require('http-errors');
 const nodeFetch = require('isomorphic-fetch');
+const https = require('https');
+
+const keepAliveAgent = new https.Agent({ keepAlive: true });
 
 const API_KEY_HEADER_NAME = 'x-api-key';
 
@@ -17,7 +20,10 @@ const callExternalApi = async ({
 		body: JSON.stringify(payload),
 		headers,
 	};
-	const fetchResponse = await nodeFetch(url, options);
+	const fetchResponse = await nodeFetch(url, {
+		...options,
+		agent: keepAliveAgent,
+	});
 	if (!expectedStatuses.includes(fetchResponse.status)) {
 		logger.error(
 			{ event: `Attempt to ${method} to ${url}`, options },

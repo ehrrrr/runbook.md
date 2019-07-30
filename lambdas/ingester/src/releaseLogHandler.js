@@ -1,5 +1,6 @@
 const logger = require('@financial-times/lambda-logger');
 const fetch = require('isomorphic-fetch');
+const https = require('https');
 const { createLambda } = require('./lib/lambda');
 const { ingest } = require('./commands/ingest');
 const { json } = require('./lib/response');
@@ -89,7 +90,10 @@ const createGithubAPIClient = (log = logger) => async (
 				: {}),
 		},
 	};
-	const response = await fetch(url, requestOptions);
+	const response = await fetch(url, {
+		...requestOptions,
+		agent: new https.Agent({ keepAlive: true }),
+	});
 
 	if (!response.ok) {
 		const contentType = response.headers.get('content-type');
@@ -271,14 +275,22 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 					},
 					'Retrieving runbook.md from Github API has failed',
 				);
+				throw Object.assign(
+					new Error(
+						'Retrieving runbook.md from GithubApi has failed',
+					),
+					{
+						record,
+					},
+				);
 			}
 		}),
 	);
 
 const processRunbookMd = async (parsedRecords, childLogger) => {
-	const runbookMDs = await fetchRunbookMds(parsedRecords, childLogger);
-
 	try {
+		const runbookMDs = await fetchRunbookMds(parsedRecords, childLogger);
+
 		const ingestedRunbooks = await ingestRunbookMDs(
 			runbookMDs,
 			childLogger,
@@ -319,6 +331,18 @@ const handler = async (event, context) => {
 		parseKinesisRecord(childLogger),
 	).filter(filterValidKinesisRecord(childLogger));
 
+	if (parsedRecords.length === 0) {
+		childLogger(
+			{
+				event: 'SKIPPING_INGEST',
+			},
+			'Nothing to ingest, skipping event',
+		);
+		return json(200, {
+			message: 'Nothing to ingest, skipping',
+		});
+	}
+
 	parsedRecords.forEach(({ commit, systemCode, user, eventID }) => {
 		childLogger.info(
 			{
@@ -334,7 +358,7 @@ const handler = async (event, context) => {
 		);
 	});
 
-	await processRunbookMd(parsedRecords, childLogger);
+	return processRunbookMd(parsedRecords, childLogger);
 };
 
 module.exports = {

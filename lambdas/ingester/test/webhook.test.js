@@ -43,7 +43,7 @@ describe('webhook', () => {
 	});
 
 	afterEach(() => {
-		jest.clearAllMocks();
+		jest.restoreAllMocks();
 	});
 
 	describe('listener', () => {

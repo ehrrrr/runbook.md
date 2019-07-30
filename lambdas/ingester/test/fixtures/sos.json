@@ -1,0 +1,113 @@
+{
+	"serviceTier": "Platinum",
+	"lifecycleStage": "Production",
+	"deliveryGroupName": "Operations & Reliability",
+	"deliveryTeamName": "Reliability Engineering",
+	"deliveryGroupCode": "operationsreliability",
+	"deliveryTeamCode": "reliability-engineering",
+	"supportGroupName": "Operations & Reliability",
+	"supportTeamName": "Reliability Engineering",
+	"supportGroupCode": "operationsreliability",
+	"supportTeamCode": "reliability-engineering",
+	"scores": {
+		"name": 0,
+		"description": 3,
+		"primaryURL": 0,
+		"serviceTier": 0,
+		"hostPlatform": 0,
+		"lifecycleStage": 0,
+		"dependents": 1,
+		"dependencies": 3,
+		"replaces": 1,
+		"repositories": 2,
+		"piiData": 0,
+		"deliveryTeam": 0,
+		"supportTeam": 0,
+		"knownAboutBy": 1,
+		"healthchecks": 2,
+		"failover": 3,
+		"dataRecovery": 0,
+		"release": 0,
+		"keyManagement": 0,
+		"monitoring": 1,
+		"firstLineTroubleshooting": 1,
+		"secondLineTroubleshooting": 0,
+		"architecture": 1,
+		"moreInformation": 1
+	},
+	"weightedScore": 91.66666666666667,
+	"totalCounts": {
+		"successes": 19,
+		"failings": 5,
+		"ok": 12,
+		"error": 3,
+		"info": 7,
+		"warning": 2
+	},
+	"percentages": {
+		"successes": 79,
+		"failings": 21,
+		"ok": 50,
+		"error": 13,
+		"info": 29,
+		"warning": 8
+	},
+	"errorMessages": {
+		"description": ["Error: Description is less than 50 characters"],
+		"dependents": [
+			"Info: This system is an orphan. It is not part of any Products or Systems"
+		],
+		"dependencies": [
+			"Error: Some dependencies have a serviceTier below Platinum"
+		],
+		"replaces": ["Info: Replaces is not specified"],
+		"repositories": ["Warning: Repositories is not specified"],
+		"knownAboutBy": ["Info: KnownAboutBy is not specified"],
+		"healthchecks": ["Warning: Healthchecks is not specified"],
+		"failover": [
+			"Error: Failover Details is needed when failover is supplied"
+		],
+		"monitoring": ["Info: Monitoring contains links"],
+		"firstLineTroubleshooting": [
+			"Info: FirstLineTroubleshooting contains links"
+		],
+		"architecture": ["Info: Architecture contains links"],
+		"moreInformation": ["Info: MoreInformation is not specified"]
+	},
+	"errorProperties": {
+		"description": [
+			{ "key": "System/undefined", "property": "description" }
+		],
+		"dependents": [{ "key": "System/undefined", "property": "dependents" }],
+		"dependencies": [
+			{ "key": "System/undefined", "property": "dependencies" }
+		],
+		"replaces": [{ "key": "System/undefined", "property": "replaces" }],
+		"repositories": [
+			{ "key": "System/undefined", "property": "repositories" }
+		],
+		"knownAboutBy": [
+			{ "key": "System/undefined", "property": "knownAboutBy" }
+		],
+		"healthchecks": [
+			{ "key": "System/undefined", "property": "healthchecks" }
+		],
+		"failover": [
+			{ "key": "System/undefined", "property": "failoverDetails" }
+		],
+		"monitoring": [{ "key": "System/undefined", "property": "monitoring" }],
+		"firstLineTroubleshooting": [
+			{
+				"key": "System/undefined",
+				"property": "firstLineTroubleshooting"
+			}
+		],
+		"architecture": [
+			{ "key": "System/undefined", "property": "architecture" }
+		],
+		"moreInformation": [
+			{ "key": "System/undefined", "property": "moreInformation" }
+		]
+	},
+	"lastUpdated": "2019-07-30T08:59:55.435Z"
+}

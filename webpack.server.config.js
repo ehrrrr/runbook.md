@@ -27,32 +27,10 @@ const sls = {
 				test: /\.jsx?$/,
 				exclude: [/node_modules/],
 				use: {
+					// use the config in babel.config.js
 					loader: 'babel-loader',
 					options: {
-						babelrc: false,
 						comments: false,
-						presets: [
-							[
-								'@babel/preset-env',
-								{
-									targets: {
-										node: true,
-									},
-									modules: 'commonjs',
-								},
-							],
-						],
-						plugins: [
-							'source-map-support',
-							[
-								'@babel/plugin-transform-react-jsx',
-								{
-									pragma: 'h', // default pragma is React.createElement
-									pragmaFrag: 'Fragment', // default is React.Fragment
-									throwIfNamespace: false, // defaults to true
-								},
-							],
-						],
 					},
 				},
 			},
