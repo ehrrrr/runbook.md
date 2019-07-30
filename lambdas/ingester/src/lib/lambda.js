@@ -96,11 +96,11 @@ const createLambda = (
 		.catch(error => {
 			loggerWithMetadata.error({ error }, 'Handler failed');
 			if (error.status) {
-				return errorHandler(error, event);
+				return errorHandler(error, event, context);
 			}
 			const errorWrapper = new Error('Internal server error');
 			errorWrapper.cause = error;
-			return errorHandler(errorWrapper, event);
+			return errorHandler(errorWrapper, event, context);
 		})
 		.catch(error => {
 			loggerWithMetadata.error({ error }, 'Error handler failed');

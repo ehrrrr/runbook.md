@@ -3,10 +3,10 @@ const render = require('./render');
 
 const CONTENT_TYPE = 'Content-Type';
 
-const errorResponse = responseHandler => (error, event) => {
+const errorResponse = responseHandler => (error, event, context) => {
 	const statusCode = error.statusCode || 500;
 	logger.error(
-		Object.assign({}, { error }, { path: event.path }),
+		{ error, path: event.path, awsRequestId: context.awsRequestId },
 		'Unhandled error',
 	);
 	return responseHandler(statusCode, error.message);
