@@ -296,9 +296,15 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 					);
 				}
 
-				fetchRunbookLogger.info({
-					event: 'GET_RUNBOOK_CONTENT_SUCCESS',
-				});
+				if (runbookContent) {
+					fetchRunbookLogger.info({
+						event: 'GET_RUNBOOK_CONTENT_SUCCESS',
+					});
+				} else {
+					fetchRunbookLogger.info({
+						event: 'GET_RUNBOOK_CONTENT_SUCCESS_NO_CONTENT',
+					});
+				}
 
 				return {
 					systemCode,
@@ -307,6 +313,8 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 					eventID,
 				};
 			} catch (error) {
+				const errorMessage =
+					'Retrieving runbook.md from Github API has failed';
 				fetchRunbookLogger.error(
 					{
 						event: 'GET_RUNBOOK_CONTENT_FAILED',
@@ -314,16 +322,12 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 						record,
 						repository,
 					},
-					'Retrieving runbook.md from Github API has failed',
+					errorMessage,
 				);
-				throw Object.assign(
-					new Error(
-						'Retrieving runbook.md from GithubApi has failed',
-					),
-					{
-						record,
-					},
-				);
+				throw Object.assign(new Error(errorMessage), {
+					cause: error,
+					record,
+				});
 			}
 		}),
 	);
