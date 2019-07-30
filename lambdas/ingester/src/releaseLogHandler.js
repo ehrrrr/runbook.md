@@ -287,7 +287,10 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 		}),
 	);
 
+const getRecordIDs = records => records.map(({ eventID }) => eventID);
+
 const processRunbookMd = async (parsedRecords, childLogger) => {
+	const eventIDs = getRecordIDs(parsedRecords);
 	try {
 		const runbookMDs = await fetchRunbookMds(parsedRecords, childLogger);
 
@@ -304,6 +307,7 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 
 		childLogger.info({
 			event: 'RELEASE_PROCESSING_SUCCESS',
+			eventIDs,
 		});
 
 		return json(200, {
@@ -312,6 +316,7 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 	} catch (error) {
 		childLogger.info({
 			event: 'RELEASE_PROCESSING_FAILURE',
+			eventIDs,
 		});
 
 		return json(400, {
@@ -324,7 +329,7 @@ const handler = async (event, context) => {
 	const childLogger = logger.child({ awsRequestId: context.awsRequestId });
 	childLogger.info({
 		event: 'RELEASE_TRIGGERED',
-		eventIDs: event.Records.map(({ eventID }) => eventID),
+		eventIDs: getRecordIDs(event.Records),
 	});
 
 	const parsedRecords = event.Records.map(
