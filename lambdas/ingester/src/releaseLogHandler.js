@@ -301,15 +301,11 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 	}
 };
 
-const flatten = arrays => [].concat(...arrays);
-
 const handler = async (event, context) => {
 	const childLogger = logger.child({ awsRequestId: context.awsRequestId });
 	childLogger.info({
 		event: 'RELEASE_TRIGGERED',
-		eventIds: flatten(
-			event.Records.map(record => record.map(({ eventID }) => eventID)),
-		),
+		eventIds: event.Records.map(({ eventID }) => eventID),
 	});
 
 	const parsedRecords = event.Records.map(parseRecord(childLogger)).filter(
