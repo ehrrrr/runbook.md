@@ -10,7 +10,7 @@ const bizOpsApiKey = process.env.BIZ_OPS_API_KEY;
 
 const decodeBase64 = string => Buffer.from(string, 'base64').toString('utf8');
 
-const parseKinesisRecord = childLogger => record => {
+const parseKinesisRecord = childLogger => (record = {}) => {
 	const RECEIVED_CHANGE_API_RECORD = 'RECEIVED_CHANGE_API_RECORD';
 	const { eventSource, eventID, kinesis: { data } = {} } = record;
 
@@ -26,7 +26,9 @@ const parseKinesisRecord = childLogger => record => {
 			},
 			'Event source was not Kinesis',
 		);
-		return;
+		return {
+			eventID: record.eventID,
+		};
 	}
 
 	let payload;
@@ -48,7 +50,9 @@ const parseKinesisRecord = childLogger => record => {
 			},
 			'Record parsing has failed',
 		);
-		return;
+		return {
+			eventID: record.eventID,
+		};
 	}
 
 	return {
@@ -57,7 +61,7 @@ const parseKinesisRecord = childLogger => record => {
 	};
 };
 
-const filterValidKinesisRecord = childLogger => record => {
+const filterValidKinesisRecord = childLogger => (record = {}) => {
 	const { commit, eventID } = record;
 	const log = childLogger.child({
 		eventID,
@@ -208,7 +212,9 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 					});
 
 					fetchRunbookLogger.info({
-						event: 'INGEST_RUNBOOK_MD_SUCCESS',
+						event: 'INGEST_RUNBOOK_MD_COMPLETE',
+						ingestStatus: result.status,
+						ingestMessage: result.message,
 					});
 					return { ...result, eventID };
 				} catch (error) {
@@ -334,19 +340,20 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 			childLogger,
 		);
 
-		ingestedRunbooks.forEach(response => {
-			if (response.status >= 400) {
-				childLogger.error({
-					...response,
-					event: 'RUNBOOK_INGEST_FAILED',
-				});
-			}
+		const errors = ingestedRunbooks.filter(result => result.status >= 400);
+		errors.forEach(result => {
+			childLogger.error({
+				...result,
+				event: 'RUNBOOK_INGEST_FAILED',
+			});
 		});
 
-		childLogger.info({
-			event: 'RELEASE_PROCESSING_SUCCESS',
-			eventIDs,
-		});
+		if (errors.length) {
+			childLogger.info({
+				event: 'RELEASE_PROCESSING_SUCCESS',
+				eventIDs,
+			});
+		}
 
 		return json(200, {
 			message: 'Ingesting changed runbook.md files was successful.',
