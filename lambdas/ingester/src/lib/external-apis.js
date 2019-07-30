@@ -34,7 +34,7 @@ const callExternalApi = async ({
 		delete options.headers[API_KEY_HEADER_NAME];
 	}
 	logger.info(
-		{ event: `POSTED to ${url}`, options },
+		{ event: `${method} request to ${url}`, options },
 		`Waiting for ${name} response`,
 	);
 	return { status: fetchResponse.status, json: await fetchResponse.json() };
