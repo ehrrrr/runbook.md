@@ -262,7 +262,7 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 						record,
 						repository,
 					},
-					'Retrieving runbook.md from GithubApi has failed',
+					'Retrieving runbook.md from Github API has failed',
 				);
 			}
 		}),
@@ -283,26 +283,53 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 			}
 		});
 
+		childLogger.info({
+			event: 'RELEASE_PROCESSING_SUCCESS',
+		});
+
 		return json(200, {
 			message: 'Ingesting changed runbook.md files was successful.',
 		});
 	} catch (error) {
+		childLogger.info({
+			event: 'RELEASE_PROCESSING_FAILURE',
+		});
+
 		return json(400, {
 			message: 'Something went wrong during ingesting runbook.md files.',
 		});
 	}
 };
 
+const flatten = arrays => [].concat(...arrays);
+
 const handler = async (event, context) => {
 	const childLogger = logger.child({ awsRequestId: context.awsRequestId });
 	childLogger.info({
 		event: 'RELEASE_TRIGGERED',
-		value: event,
+		eventIds: flatten(
+			event.Records.map(record => record.map(({ eventID }) => eventID)),
+		),
 	});
 
 	const parsedRecords = event.Records.map(parseRecord(childLogger)).filter(
 		payload => payload && !!payload.isProdEnv,
 	);
+
+	parsedRecords.forEach(({ commit, systemCode, user, eventId }) => {
+		childLogger.info(
+			{
+				event: 'BEGIN_PROCESSING_RELEASE_RECORD',
+				record: {
+					commit,
+					systemCode,
+					user,
+					eventId,
+				},
+			},
+			'Began processing record',
+		);
+	});
 
 	await processRunbookMd(parsedRecords, childLogger);
 };
