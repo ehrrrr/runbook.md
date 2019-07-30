@@ -64,7 +64,7 @@ const filterValidKinesisRecord = childLogger => record => {
 	});
 
 	if (!commit) {
-		log.warn(
+		log.error(
 			{ event: 'INSUFFICIENT_DATA', record },
 			'Record did not contain commit',
 		);
@@ -177,6 +177,10 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 		runbookMDs
 			.filter(({ content }) => !!content)
 			.map(async ({ user, systemCode, content, eventID }) => {
+				logger.info({
+					event: 'INGEST_RUNBOOK_MD_START',
+				});
+
 				const userName = user.split('@')[0];
 				try {
 					const result = await ingest(userName, {
@@ -184,6 +188,10 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 						content,
 						writeToBizOps: true,
 						bizOpsApiKey,
+					});
+
+					logger.info({
+						event: 'INGEST_RUNBOOK_MD_SUCCESS',
 					});
 					return { ...result, eventID };
 				} catch (error) {
@@ -214,6 +222,11 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 			} = record;
 
 			const fetchRunbookLogger = childLogger.child({ eventID });
+
+			fetchRunbookLogger.info({
+				event: 'GET_RUNBOOK_CONTENT_START',
+			});
+
 			const runbookSource = new RunbookSource({
 				logger: fetchRunbookLogger,
 				githubAPI: createGithubAPIClient(fetchRunbookLogger),
@@ -260,6 +273,10 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 						prNumber,
 					);
 				}
+
+				fetchRunbookLogger.info({
+					event: 'GET_RUNBOOK_CONTENT_SUCCESS',
+				});
 
 				return {
 					systemCode,
