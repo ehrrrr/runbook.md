@@ -34,11 +34,13 @@ exports.ValidationResult = ({
 				</p>
 			</aside>
 		)}
-		<div className="o-grid-row fullwidth with-margin-bottom">
-			<div data-o-grid-colspan="12">
-				<ScoreTile value={weightedScore} />
+		{!parseErrors.length && (
+			<div className="o-grid-row fullwidth with-margin-bottom">
+				<div data-o-grid-colspan="12">
+					<ScoreTile value={weightedScore} />
+				</div>
 			</div>
-		</div>
+		)}
 		<div className="o-grid-row fullwidth with-margin-bottom">
 			<div data-o-grid-colspan="12">
 				{message && message.length > 0 && (

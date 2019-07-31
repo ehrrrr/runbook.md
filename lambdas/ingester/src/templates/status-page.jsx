@@ -36,7 +36,7 @@ const StatusPage = ({
 				</span>
 			</p>
 			<ValidationResult
-				alertState={alertState}
+				alertState={alertState === 'failure' ? 'error' : alertState}
 				message={message}
 				parseData={parseData}
 				parseErrors={parseErrors}
