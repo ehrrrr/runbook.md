@@ -1,35 +1,60 @@
-# Runbook.md
+# runbook.md
 
-This utility offers the user the opportunity to create and upload a RUNBOOK.md file into Biz Ops to populate all the critical fields.
+runbook.md is a toolchain used for improving the quality of runbooks across the business, and ensuring consistency of the information contained within runbooks with [biz-ops](https://biz-ops.in.ft.com/) – the knowledge base which models our business operations.
 
-In this **BETA** implementation we offer both a GUI and an /ingest endpoint (to which you can POST RUNBOOK.md) content.
+Talk to us in [#runbooks-in-repos](https://financialtimes.slack.com/messages/CFR0GPCAH) on Slack if you have any further questions.
 
-See a sample of the format/content of the RUNBOOK.md file [here](./docs/example.md).
+## Toolchain
+
+### Automated ingestion on publishing of release logs
+
+All systems which integrate with [Change API](https://github.com/Financial-Times/change-api#change-api---v2) benefit from automated `runbook.md` ingestion and synchronisation with [biz-ops](https://biz-ops.in.ft.com/), on every release that contains changes to a `runbook.md` file.
+
+Simply add Change API to your deployment pipeline and release your code.
+A successful journey will see any `runbook.md` file changes automatically applied in Biz Ops to the relevant system(s).
+
+Here is the workflow ![workflow](./docs/changeApi_runbooks.md_workflow.png)
+
+### GitHub app (alpha)
+
+The [runbook.md github app](https://github.com/organizations/Financial-Times/settings/installations/1210233) validates a repository's RUNBOOK.MD files against our organisation-wide standard, and offers suggestions for improvement.
+
+**This application is alpha. Please AVOID installing it on all repositories. If you would like to test-drive it, add your repo to the repository access list [here](https://github.com/organizations/Financial-Times/settings/installations/1210233).**
+
+### Manual update
+
+This utility allows manual upload of a RUNBOOK.md file for validation and [operability scoring](https://github.com/Financial-Times/system-operability-score). Optionally, the tool can be used to populate associated critical fields in Biz Ops based on the content of a _valid runbook_.
+
+See an example of the format/content of a RUNBOOK.md file [here](./docs/example.md).
+
+## System (business logic) overview
 
 ![image](https://user-images.githubusercontent.com/447559/58543123-b62f4580-81f6-11e9-8f9b-7d694d159e85.png)
 
-## Installation and Development
+## Installation and development
 
-Make is the general task runner
+### Prerequisites
 
--   `make install` to install dependencies and add linting config files
--   `make env` to fetch environment vars from Vault
--   You need to download docker from https://docs.docker.com/ and make sure it's running
--   You also need to ensure AWS CLI is installed https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
--   `make run` will run the app which you can then visit at http://localhost:3000/runbook.md
--   `make test` will run tests
--   `make verify` will run eslint, using prettier
+-   Ensure [Docker](https://docs.docker.com/) is installed and running
+-   Ensure AWS CLI tooling is installed https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
 
-## Send records to an offline AWS Kinesis stream
+Using [GNU Make](https://www.gnu.org/software/make/) as a task runner:
 
-In Makefile the run task set up the offline kinesis environment and create the stream called `change-request-api-test-enriched-stream`.
-To put a record on the stream run the following AWS CLI command.
+-   `make install` installs dependencies and add linting config files
+-   `make env` populates an `.env` file with the appropriate environment variables from Vault
+-   `make run` runs the app which you can then visit at http://localhost:3000/runbook.md
+-   `make test` runs tests
+-   `make verify` runs linter checks (with eslint, using prettier)
+
+### Emulating Change API's release log message stream, offline
+
+The task `make run-local-message-stream` sets up and starts an [offline emulation of AWS' Kinesis](https://github.com/mhart/kinesalite). You can put records onto the resulting stream – `change-request-api-test-enriched-stream` – using the following AWS CLI command.
 
 ```bash
-aws kinesis --endpoint-url http://localhost:4567 put-record --stream-name change-request-api-test-enriched-stream  --partition-key “MyFirstMessage” --data "{\"systemData\":{\"name\":\"Biz Ops Search\",\"SF_ID\":\"a22D0000002ugnxIAA\",\"serviceTier\":\"Bronze\",\"dataOwner\":{\"email\":\"rhys.evans@ft.com\"},\"supportedBy\":{\"email\":\"reliability.engineering@ft.com\"},\"repositories\":{\"code\":\"github:Financial-Times/biz-ops-api\"},\"deliveredBy\":{\"productOwners\":[{\"email\":\"sarah.wells@ft.com\"}],\"group\":{\"code\":\"operationsreliability\",\"name\":\"Operations & Reliability\"}}},\"githubData\":{\"title\":\"Fix change type in salesforce\",\"htmlUrl\":\"https://github.com/Financial-Times/change-api/pull/52\"},\"user\":{\"githubName\":\"testUser\",\"email\":null},\"environment\":\"production\",\"systemCode\":\"biz-ops-search\",\"commit\":\"c50128fc67f055356d4171f570aa2600e42dc2d1\",\"timestamp\":\"2019-06-18T09:38:44.286Z\",\"loggerContext\":{\"traceId\":\"e3860769-3341-4ea2-b29e-c9d96c260f13\",\"clientSystemCode\":\"biz-ops-search\"},\"isProdEnv\":true,\"salesforceSystemId\":\"a22D0000002ugnxIAA\"}"
+aws kinesis --endpoint-url http://localhost:4567 put-record --stream-name change-request-api-test-enriched-stream  --partition-key “MyFirstMessage” --data [stringifiedJSONreleaseLog](https://github.com/Financial-Times/runbook.md/blob/master/docs/change-api-example-message.json)
 ```
 
-## Troubleshooting
+### Troubleshooting common issues
 
 The following error can occur when trying try to execute `make run`:
 
