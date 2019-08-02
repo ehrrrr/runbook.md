@@ -37,7 +37,7 @@ const statusPageHandler = async event => {
 		};
 
 		if (errors.validation) {
-			alert.message += `, with ${errors.validation} validation errors`;
+			alert.message += `, with ${errors.validation} validation errors or notifications`;
 		}
 
 		return renderPage(

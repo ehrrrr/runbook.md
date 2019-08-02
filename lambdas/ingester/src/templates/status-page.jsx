@@ -31,7 +31,7 @@ const StatusPage = ({
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						{hash} &raquo;
+						{hash.substr(0, 6)} &raquo;
 					</a>
 				</span>
 			</p>

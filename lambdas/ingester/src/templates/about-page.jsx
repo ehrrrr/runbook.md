@@ -36,11 +36,12 @@ const About = () => {
 				<h3 id="github-app">The GitHub App</h3>
 				The github app can be installed in any repository. This will
 				give feedback on any PR about the quality of RUNBOOK.md&apos;s
-				content. This is a work in progress - please ask in the{' '}
-				<a href="https://financialtimes.slack.com/messages/C07B3043U">
-					#reliability-eng slack channel
+				content. Visit{' '}
+				<a href="https://github.com/organizations/Financial-Times/settings/installations/1210233">
+					the github app page and add your repository
 				</a>{' '}
-				if you would like to try it out.
+				if you would like to try it out. We will probably install it
+				globally once it&apos;s been tried by a few different projects
 				<p />
 				<h3 id="changeapi">Change API Events</h3>
 				The Change API allows engineers to automatically log test and
