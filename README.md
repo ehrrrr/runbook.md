@@ -10,16 +10,18 @@ Talk to us in [#runbooks-in-repos](https://financialtimes.slack.com/messages/CFR
 
 All systems which integrate with [Change API](https://github.com/Financial-Times/change-api#change-api---v2) benefit from automated `runbook.md` ingestion and synchronisation with [biz-ops](https://biz-ops.in.ft.com/), on every release that contains changes to a `runbook.md` file.
 
-Simply add Change API to your deployment pipeline and release your code.
+Please add Change API to your deployment pipeline and release your code.
 A successful journey will see any `runbook.md` file changes automatically applied in Biz Ops to the relevant system(s).
 
-Here is the workflow ![workflow](./docs/changeApi_runbooks.md_workflow.png)
+Here is the workflow: ![workflow](./docs/changeApi_runbooks.md_workflow.png)
 
 ### GitHub app (alpha)
 
 The [runbook.md github app](https://github.com/organizations/Financial-Times/settings/installations/1210233) validates a repository's RUNBOOK.MD files against our organisation-wide standard, and offers suggestions for improvement.
 
-**This application is alpha. Please AVOID installing it on all repositories. If you would like to test-drive it, add your repo to the repository access list [here](https://github.com/organizations/Financial-Times/settings/installations/1210233).**
+> **This application is alpha. Please AVOID installing it on all repositories. If you would like to test-drive it, add your repo to the repository access list [here](https://github.com/organizations/Financial-Times/settings/installations/1210233).**
+
+![image](https://user-images.githubusercontent.com/12828487/62377885-8d4f6780-b53b-11e9-946b-49292d32f12d.png)
 
 ### Manual update
 
@@ -51,7 +53,10 @@ Using [GNU Make](https://www.gnu.org/software/make/) as a task runner:
 The task `make run-local-message-stream` sets up and starts an [offline emulation of AWS' Kinesis](https://github.com/mhart/kinesalite). You can put records onto the resulting stream – `change-request-api-test-enriched-stream` – using the following AWS CLI command.
 
 ```bash
-aws kinesis --endpoint-url http://localhost:4567 put-record --stream-name change-request-api-test-enriched-stream  --partition-key “MyFirstMessage” --data [stringifiedJSONreleaseLog](https://github.com/Financial-Times/runbook.md/blob/master/docs/change-api-example-message.json)
+aws kinesis --endpoint-url http://localhost:4567 \
+   put-record --stream-name change-request-api-test-enriched-stream \
+   --partition-key “MyFirstMessage” \
+   --data [stringifiedJSONreleaseLog](https://github.com/Financial-Times/runbook.md/blob/master/docs/change-api-example-message.json)
 ```
 
 ### Troubleshooting common issues

@@ -1,45 +1,45 @@
 {
-   "systemData":{
-      "name":"Biz Ops Search",
-      "SF_ID":"a22D0000002ugnxIAA",
-      "serviceTier":"Bronze",
-      "dataOwner":{
-         "email":"rhys.evans@ft.com"
-      },
-      "supportedBy":{
-         "email":"reliability.engineering@ft.com"
-      },
-      "repositories":{
-         "code":"github:Financial-Times/biz-ops-api"
-      },
-      "deliveredBy":{
-         "productOwners":[
-            {
-               "email":"sarah.wells@ft.com"
-            }
-         ],
-         "group":{
-            "code":"operationsreliability",
-            "name":"Operations & Reliability"
-         }
-      }
-   },
-   "githubData":{
-      "title":"Fix change type in salesforce",
-      "htmlUrl":"https://github.com/Financial-Times/change-api/pull/52"
-   },
-   "user":{
-      "githubName":"testUser",
-      "email":null
-   },
-   "environment":"production",
-   "systemCode":"biz-ops-search",
-   "commit":"c50128fc67f055356d4171f570aa2600e42dc2d1",
-   "timestamp":"2019-06-18T09:38:44.286Z",
-   "loggerContext":{
-      "traceId":"e3860769-3341-4ea2-b29e-c9d96c260f13",
-      "clientSystemCode":"biz-ops-search"
-   },
-   "isProdEnv":true,
-   "salesforceSystemId":"a22D0000002ugnxIAA"
+	"systemData": {
+		"name": "Biz Ops Search",
+		"SF_ID": "a22D0000002ugnxIAA",
+		"serviceTier": "Bronze",
+		"dataOwner": {
+			"email": "rhys.evans@ft.com"
+		},
+		"supportedBy": {
+			"email": "reliability.engineering@ft.com"
+		},
+		"repositories": {
+			"code": "github:Financial-Times/biz-ops-api"
+		},
+		"deliveredBy": {
+			"productOwners": [
+				{
+					"email": "sarah.wells@ft.com"
+				}
+			],
+			"group": {
+				"code": "operationsreliability",
+				"name": "Operations & Reliability"
+			}
+		}
+	},
+	"githubData": {
+		"title": "Fix change type in salesforce",
+		"htmlUrl": "https://github.com/Financial-Times/change-api/pull/52"
+	},
+	"user": {
+		"githubName": "testUser",
+		"email": null
+	},
+	"environment": "production",
+	"systemCode": "biz-ops-search",
+	"commit": "HASH_HERE",
+	"timestamp": "2019-06-18T09:38:44.286Z",
+	"loggerContext": {
+		"traceId": "HASH_HERE",
+		"clientSystemCode": "biz-ops-search"
+	},
+	"isProdEnv": true,
+	"salesforceSystemId": "a22D0000002ugnxIAA"
 }
