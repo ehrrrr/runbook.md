@@ -19,7 +19,7 @@ Here is the workflow: ![workflow](./docs/changeApi_runbooks.md_workflow.png)
 
 The [runbook.md github app](https://github.com/organizations/Financial-Times/settings/installations/1210233) validates a repository's RUNBOOK.MD files against our organisation-wide standard, and offers suggestions for improvement.
 
-> **This application is alpha. Please AVOID installing it on all repositories. If you would like to test-drive it, add your repo to the repository access list [here](https://github.com/organizations/Financial-Times/settings/installations/1210233).**
+**This application is alpha. Please AVOID installing it on all repositories. If you would like to test-drive it, add your repo to the repository access list [here](https://github.com/organizations/Financial-Times/settings/installations/1210233).**
 
 ![image](https://user-images.githubusercontent.com/12828487/62377885-8d4f6780-b53b-11e9-946b-49292d32f12d.png)
 
