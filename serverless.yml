@@ -1,145 +1,150 @@
 service: biz-ops-runbook-md
 
 provider:
-    name: aws
-    stackTags:
-        description: Automated import of runbook content from github runbook.md
-        systemCode: ${self:service}
-        teamDL: reliability.engineering@ft.com
-        environment: ${env:ENVIRONMENT_TAG}
-    runtime: nodejs10.x
-    stage: ${opt:stage, 'test'}
-    region: eu-west-1
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/FTApplicationRoleFor_biz-ops-runbook-md
-    timeout: 30
-    deploymentBucket: artefacts.biz-ops-runbook-md.${env:AWS_ACCOUNT_ID}
-    environment:
-        GITHUB_APP_ID: ${env:GITHUB_APP_ID}
-        GITHUB_PRIVATE_KEY_STRING: ${env:GITHUB_PRIVATE_KEY_STRING}
-        GITHUB_WEBHOOK_SECRET: ${env:GITHUB_WEBHOOK_SECRET}
-        GITHUB_AUTH_TOKEN: ${env:GITHUB_AUTH_TOKEN}
-        BIZ_OPS_API_URL: ${env:BIZ_OPS_API_URL}
-        BIZ_OPS_API_KEY: ${env:BIZ_OPS_API_KEY}
-        BIZ_OPS_URL: ${env:BIZ_OPS_URL}
-        BASE_HOST: ${env:BASE_HOST}
-        BASE_URL: ${env:BASE_URL}
-        SCHEMA_BASE_URL: ${env:SCHEMA_BASE_URL}
-        SOS_URL: ${env:SOS_URL}
-        AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
-        CONSOLE_LOG_LEVEL: info
-        ENVIRONMENT: ${env:ENVIRONMENT}
-        NODE_ENV: ${self:custom.${self:provider.stage}.NODE_ENV, 'production'}
-        STAGE: ${self:provider.stage}
-        SYSTEM_CODE: ${self:service}
+  name: aws
+  stackTags:
+    description: Automated import of runbook content from github runbook.md
+    systemCode: ${self:service}
+    teamDL: reliability.engineering@ft.com
+    environment: ${env:ENVIRONMENT_TAG}
+  runtime: nodejs10.x
+  stage: ${opt:stage, 'test'}
+  region: eu-west-1
+  role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/FTApplicationRoleFor_biz-ops-runbook-md
+  timeout: 30
+  deploymentBucket: artefacts.biz-ops-runbook-md.${env:AWS_ACCOUNT_ID}
+  environment:
+    GITHUB_APP_ID: ${env:GITHUB_APP_ID}
+    GITHUB_PRIVATE_KEY_STRING: ${env:GITHUB_PRIVATE_KEY_STRING}
+    GITHUB_WEBHOOK_SECRET: ${env:GITHUB_WEBHOOK_SECRET}
+    GITHUB_AUTH_TOKEN: ${env:GITHUB_AUTH_TOKEN}
+    BIZ_OPS_API_URL: ${env:BIZ_OPS_API_URL}
+    BIZ_OPS_API_KEY: ${env:BIZ_OPS_API_KEY}
+    BIZ_OPS_URL: ${env:BIZ_OPS_URL}
+    BASE_HOST: ${env:BASE_HOST}
+    BASE_URL: ${env:BASE_URL}
+    SCHEMA_BASE_URL: ${env:SCHEMA_BASE_URL}
+    SOS_URL: ${env:SOS_URL}
+    AWS_ACCOUNT_ID: ${env:AWS_ACCOUNT_ID}
+    CONSOLE_LOG_LEVEL: info
+    ENVIRONMENT: ${env:ENVIRONMENT}
+    NODE_ENV: ${self:custom.${self:provider.stage}.NODE_ENV, 'production'}
+    STAGE: ${self:provider.stage}
+    SYSTEM_CODE: ${self:service}
 
 custom:
 
-    alerts:
-        topics:
-            ok: arn:aws:sns:${self:provider.region}:${env:AWS_ACCOUNT_ID}:cloudwatch-alarms
-            alarm: arn:aws:sns:${self:provider.region}:${env:AWS_ACCOUNT_ID}:cloudwatch-alarms
-        global:
-            - functionErrors
+  alerts:
+    nameTemplate: $[functionName]-$[metricName]-Alarm
+    alarms:
+      - functionErrors
+    definitions:
+      functionErrors:
+        nameTemplate: $[functionName] error rate is high systemCode=${self:service},environment=${env:ENVIRONMENT_TAG},severity=2
+        description: 'Error count breached threshold. <https://runbooks.in.ft.com/${self:service}|View Runbook>'
+        treatMissingData: ignore
+        threshold: 5
+        namespace: 'AWS/Lambda'
 
-    logForwarding:
-        destinationARN: ${cf:aws-composer-auditing-global-stack.SplunkCloudIndexerLambdaarn}
-        filterPattern: '-"RequestId: "'
-        stages:
-            - test
-            - prod
+  logForwarding:
+    destinationARN: ${cf:aws-composer-auditing-global-stack.SplunkCloudIndexerLambdaarn}
+    filterPattern: '-"RequestId: "'
+    stages:
+      - test
+      - prod
 
-    serverless-offline:
-        dontPrintOutput: true
-        prefix: ''
-        host: local.in.ft.com
-        port: ${env:PORT, '3000'}
-        noTimeout: true
+  serverless-offline:
+    dontPrintOutput: true
+    prefix: ''
+    host: local.in.ft.com
+    port: ${env:PORT, '3000'}
+    noTimeout: true
 
-    serverless-offline-kinesis:
-        endpoint: http://0.0.0.0:4567
-        region: ${self:provider.region}
-        skipCacheInvalidation: false
+  serverless-offline-kinesis:
+    endpoint: http://0.0.0.0:4567
+    region: ${self:provider.region}
+    skipCacheInvalidation: false
 
-    prune:
-        automatic: true
-        number: 3
+  prune:
+    automatic: true
+    number: 3
 
-    webpack:
-        webpackConfig: 'webpack.server.config.js'
-        includeModules: true
-        packager: 'npm'
-        excludeFiles: test/*
-        keepOutputDirectory: true
+  webpack:
+    webpackConfig: 'webpack.server.config.js'
+    includeModules: true
+    packager: 'npm'
+    excludeFiles: test/*
+    keepOutputDirectory: true
 
 functions:
-    about:
-        description: About page for the RUNBOOK.md project
-        handler: lambdas/ingester/src/aboutPageHandler.handler
-        timeout: 10
-        memorySize: 512
-        events:
-            - http:
-                path: /runbook.md/about
-                method: get
-    form:
-        description: GUI for driving ingestion of a runbook.md
-        handler: lambdas/ingester/src/formHandler.handler
-        timeout: 30
-        events:
-            - http:
-                  path: /runbook.md
-                  method: get
-            - http:
-                  path: /runbook.md
-                  method: post
-    releaseLog:
-        description: Apply runbook.md changes on prod release
-        handler: lambdas/ingester/src/releaseLogHandler.handler
-        timeout: 30
-        events:
-            - stream:
-                  type: kinesis
-                  batchSize: 100
-                  arn: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-${env:ENVIRONMENT}-enriched-stream
-                  startingPosition: TRIM_HORIZON
-                  enabled: true
-    status:
-        description: Status page for GitHub checks
-        handler: lambdas/ingester/src/statusPageHandler.handler
-        timeout: 30
-        events:
-            - http:
-                  path: /runbook.md/status/{owner}/{repo}/{hash}
-                  method: get
-    githubWebhook:
-        description: GitHub webhook responder
-        handler: lambdas/ingester/src/githubWebhookHandler.handler
-        timeout: 30
-        events:
-            - http:
-                  path: /webhook
-                  method: post
+  about:
+    description: About page for the RUNBOOK.md project
+    handler: lambdas/ingester/src/aboutPageHandler.handler
+    timeout: 10
+    memorySize: 512
+    events:
+      - http:
+        path: /runbook.md/about
+        method: get
+  form:
+    description: GUI for driving ingestion of a runbook.md
+    handler: lambdas/ingester/src/formHandler.handler
+    timeout: 30
+    events:
+      - http:
+          path: /runbook.md
+          method: get
+      - http:
+          path: /runbook.md
+          method: post
+  releaseLog:
+    description: Apply runbook.md changes on prod release
+    handler: lambdas/ingester/src/releaseLogHandler.handler
+    timeout: 30
+    events:
+      - stream:
+          type: kinesis
+          batchSize: 100
+          arn: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-${env:ENVIRONMENT}-enriched-stream
+          startingPosition: TRIM_HORIZON
+          enabled: true
+  status:
+    description: Status page for GitHub checks
+    handler: lambdas/ingester/src/statusPageHandler.handler
+    timeout: 30
+    events:
+      - http:
+          path: /runbook.md/status/{owner}/{repo}/{hash}
+          method: get
+  githubWebhook:
+    description: GitHub webhook responder
+    handler: lambdas/ingester/src/githubWebhookHandler.handler
+    timeout: 30
+    events:
+      - http:
+          path: /webhook
+          method: post
 
 plugins:
-    - serverless-plugin-aws-alerts
-    - serverless-log-forwarding
-    - serverless-webpack
-    - serverless-offline-kinesis
-    - serverless-offline
-    - serverless-prune-plugin
-    - serverless-offline-sts
+  - serverless-plugin-aws-alerts
+  - serverless-log-forwarding
+  - serverless-webpack
+  - serverless-offline-kinesis
+  - serverless-offline
+  - serverless-prune-plugin
+  - serverless-offline-sts
 
 package:
-    individually: true
-    exclude:
-        - certs/**
-        - coverage/**
-        - test/**
-        - .circleci/**
-        - cdn/**
-        - terraform.tfstate
-        - terraform.tfstate.backup
-        - .terraform/**
-        - .biz-ops
-        - bin/**
-        - scripts
+  individually: true
+  exclude:
+    - certs/**
+    - coverage/**
+    - test/**
+    - .circleci/**
+    - cdn/**
+    - terraform.tfstate
+    - terraform.tfstate.backup
+    - .terraform/**
+    - .biz-ops
+    - bin/**
+    - scripts
