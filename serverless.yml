@@ -84,8 +84,8 @@ functions:
     memorySize: 512
     events:
       - http:
-        path: /runbook.md/about
-        method: get
+          path: /runbook.md/about
+          method: get
   form:
     description: GUI for driving ingestion of a runbook.md
     handler: lambdas/ingester/src/formHandler.handler
