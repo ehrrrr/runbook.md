@@ -42,3 +42,5 @@ module.exports = function coerceBizopsPropertiesToType({ validateProperty }) {
 		visit(tree, 'property', mutate);
 	};
 };
+
+module.exports.excludedProperties = excludedProperties;

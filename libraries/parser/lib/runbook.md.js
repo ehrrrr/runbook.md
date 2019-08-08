@@ -64,5 +64,7 @@ module.exports = schema => {
 		}
 	};
 
+	runbookMd.excludedProperties = validateBizopsProperties.excludedProperties;
+
 	return runbookMd;
 };

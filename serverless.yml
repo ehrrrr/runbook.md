@@ -86,6 +86,15 @@ functions:
       - http:
           path: /runbook.md/about
           method: get
+  export:
+    description: Exports a runbook.md from current biz-ops data
+    handler: lambdas/ingester/src/exportHandler.handler
+    timeout: 10
+    memorySize: 512
+    events:
+      - http:
+          path: /runbook.md/export
+          method: get
   form:
     description: GUI for driving ingestion of a runbook.md
     handler: lambdas/ingester/src/formHandler.handler

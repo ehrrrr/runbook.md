@@ -5,6 +5,29 @@ const About = () => {
 	return (
 		<main className="o-layout__main">
 			<GraphvizLibrary />
+			<aside>
+				<form
+					action="export"
+					method="GET"
+					className="o-forms o-forms-field"
+				>
+					<h2>Get started</h2>
+					<label htmlFor="system-code" className="o-forms__label">
+						Enter a system code to generate a runbook.md for your
+						system
+					</label>
+					<span className="o-forms-input o-forms-input--text">
+						<input type="text" id="system-code" name="systemCode" />
+					</span>
+					<br />
+					<button
+						type="submit"
+						className="o-buttons o-buttons--primary o-buttons--big"
+					>
+						Generate
+					</button>
+				</form>
+			</aside>
 			<div className="o-layout-typography">
 				<h1 className="group-title">
 					About RUNBOOK.md (GitHub markdown importer)
