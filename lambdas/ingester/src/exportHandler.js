@@ -5,7 +5,7 @@ const runbookMd = require('../../../libraries/parser');
 
 const uncamelCase = str =>
 	str
-		.replace(/([a-z])([A-Z])/, '$1 $2')
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
 		.replace(/^[a-z]/, $0 => $0.toUpperCase());
 
 const handler = async event => {
@@ -34,19 +34,29 @@ ${data.description}
 	const fields = []
 		.concat(
 			...Object.values(systemSchema.fieldsets).map(({ properties }) =>
-				Object.keys(properties),
+				Object.entries(properties).map(
+					([name, { isRelationship, hasMany }]) => ({
+						name,
+						isRelationship,
+						hasMany,
+					}),
+				),
 			),
 		)
-		.filter(prop => prop in data);
+		.filter(({ name }) => name in data);
 
 	const md = `${preamble}
 
 ${fields
 	.map(
-		prop => `
-## ${uncamelCase(prop)}
+		({ name, isRelationship, hasMany }) => `
+## ${uncamelCase(name)}
 
-${data[prop]}
+${
+	isRelationship && hasMany
+		? data[name].map(code => `- ${code}`).join('\n')
+		: data[name]
+}
 `,
 	)
 	.join('\n')}
