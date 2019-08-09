@@ -14,9 +14,7 @@ const handler = async event => {
 
 	const data = await readSystem(systemCode);
 	excludedProperties.forEach(prop => {
-		if (prop in data) {
-			delete data[prop];
-		}
+		delete data[prop];
 	});
 	const preamble = `<!--
     Written in the format prescribed by https://github.com/Financial-Times/runbook.md.
