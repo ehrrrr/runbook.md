@@ -18,6 +18,9 @@ const excludedProperties = [
 	'sosTrafficLight',
 	'stakeholders',
 	'updatesData',
+	'dataOwner',
+	'gdprRetentionProcess',
+	'gdprErasureProcess',
 ];
 
 module.exports = function coerceBizopsPropertiesToType({ validateProperty }) {
