@@ -3,6 +3,34 @@ const { createLambda } = require('./lib/lambda');
 const { readSystem } = require('./lib/biz-ops-client');
 const runbookMd = require('../../../libraries/parser');
 
+const desirableFields = [
+	'description',
+	'primaryURL',
+	'replaces',
+	'repositories',
+	'hostPlatform',
+	'containsPersonalData',
+	'containsSensitiveData',
+	'deliveredBy',
+	'supportedBy',
+	'knownAboutBy',
+	'dependents',
+	'dependentProducts',
+	'dependencies',
+	'healthchecks',
+	'failoverArchitectureType',
+	'failoverProcessType',
+	'failbackProcessType',
+	'failoverDetails',
+	'dataRecoveryProcessType',
+	'dataRecoveryDetails',
+	'releaseProcessType',
+	'releaseDetails',
+	'rollbackProcessType',
+	'keyManagementProcessType',
+	'keyManagementDetails',
+];
+
 const uncamelCase = str =>
 	str
 		.replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -29,32 +57,66 @@ ${data.description}
 
 	const systemSchema = schema.getType('System', { groupProperties: true });
 
+	const enums = schema.getEnums();
+
 	const fields = []
 		.concat(
 			...Object.values(systemSchema.fieldsets).map(({ properties }) =>
 				Object.entries(properties).map(
-					([name, { isRelationship, hasMany }]) => ({
+					([name, { isRelationship, hasMany, type }]) => ({
 						name,
 						isRelationship,
 						hasMany,
+						type,
 					}),
 				),
 			),
 		)
-		.filter(({ name }) => name in data);
+		.filter(({ name }) => name in data || desirableFields.includes(name));
+
+	const outputValue = ({ name, isRelationship, hasMany, type }) => {
+		if (name in data) {
+			return isRelationship && hasMany
+				? data[name].map(code => `- ${code}`).join('\n')
+				: data[name];
+		}
+
+		console.log(name, type);
+
+		if (isRelationship) {
+			return `<!--
+${
+	hasMany
+		? `Enter a markdown list of valid ${type} codes`
+		: `Enter a valid ${type} code`
+}
+-->`;
+		}
+
+		if (type in enums) {
+			return `<!--
+Choose from ${Object.keys(enums[type]).join(', ')}
+-->`;
+		}
+
+		if (type === 'Boolean') {
+			return `<!--
+Choose Yes or No
+-->`;
+		}
+		return `<!--
+Enter descriptive text, or delete this comment and the heading above
+-->`;
+	};
 
 	const md = `${preamble}
 
 ${fields
 	.map(
-		({ name, isRelationship, hasMany }) => `
-## ${uncamelCase(name)}
+		field => `
+## ${uncamelCase(field.name)}
 
-${
-	isRelationship && hasMany
-		? data[name].map(code => `- ${code}`).join('\n')
-		: data[name]
-}
+${outputValue(field)}
 `,
 	)
 	.join('\n')}
