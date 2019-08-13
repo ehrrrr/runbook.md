@@ -4,18 +4,14 @@ const { readSystem } = require('./lib/biz-ops-client');
 const runbookMd = require('../../../libraries/parser');
 
 const desirableFields = [
-	'description',
 	'primaryURL',
 	'replaces',
-	'repositories',
 	'hostPlatform',
 	'containsPersonalData',
 	'containsSensitiveData',
 	'deliveredBy',
 	'supportedBy',
 	'knownAboutBy',
-	'dependents',
-	'dependentProducts',
 	'dependencies',
 	'healthchecks',
 	'failoverArchitectureType',
@@ -41,16 +37,13 @@ const handler = async event => {
 	const { systemCode } = event.queryStringParameters;
 
 	const data = await readSystem(systemCode);
-	excludedProperties.forEach(prop => {
-		delete data[prop];
-	});
 	const preamble = `<!--
     Written in the format prescribed by https://github.com/Financial-Times/runbook.md.
     Any future edits should abide by this format.
 -->
-# ${data.name}
+# ${data.name || '<!-- Enter a name  -->'}
 
-${data.description}
+${data.description || '<!-- Enter a description  -->'}
 `;
 	delete data.name;
 	delete data.description;
@@ -72,7 +65,8 @@ ${data.description}
 				),
 			),
 		)
-		.filter(({ name }) => name in data || desirableFields.includes(name));
+		.filter(({ name }) => name in data || desirableFields.includes(name))
+		.filter(({ name }) => !excludedProperties.includes(name));
 
 	const outputValue = ({ name, isRelationship, hasMany, type }) => {
 		if (name in data) {
