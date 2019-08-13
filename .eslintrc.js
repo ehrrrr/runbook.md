@@ -19,5 +19,9 @@ module.exports = {
 				jest: true,
 			},
 		},
+		{
+			env: {browser: true},
+			files: 'lambdas/**/browser/**/*.js'
+		}
 	],
 };

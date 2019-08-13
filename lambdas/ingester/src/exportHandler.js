@@ -81,8 +81,6 @@ ${data.description}
 				: data[name];
 		}
 
-		console.log(name, type);
-
 		if (isRelationship) {
 			return `<!--
 ${

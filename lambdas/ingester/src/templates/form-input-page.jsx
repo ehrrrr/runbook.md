@@ -5,6 +5,7 @@ const {
 	WriteFlag,
 	ApiKey,
 	RunbookEntry,
+	RunbookImport,
 } = require('./components/input-fields');
 
 const { ValidationResult } = require('./components/validation-result');
@@ -26,6 +27,7 @@ const ValidateForm = ({
 }) => (
 	<Fragment>
 		<div className="o-layout__sidebar" />
+
 		<form
 			method="POST"
 			className="o-layout__main o-layout-typography runbook-form"
@@ -49,6 +51,7 @@ const ValidateForm = ({
 			<h2 id="runbook-input">Runbook Content</h2>
 			<div className="o-grid-row fullwidth with-margin-bottom">
 				<div data-o-grid-colspan="12">
+					<RunbookImport content={content} />
 					<RunbookEntry
 						placeholder={placeholder}
 						content={content}
@@ -56,6 +59,7 @@ const ValidateForm = ({
 					/>
 				</div>
 			</div>
+
 			<aside>
 				<p>
 					If you have enabled writing to Biz-Ops, this action will

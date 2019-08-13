@@ -90,6 +90,42 @@ module.exports = function(form) {
 	];
 	const submitButton = form.querySelector('#submitRunbookForm');
 	const runbookContent = form.querySelector('#content');
+	const choiceForm = form.querySelector('#import-or-manual');
+
+	if (choiceForm) {
+		const cleanup = () => {
+			form.querySelector('#runbookContent').removeAttribute('hidden');
+			choiceForm.parentNode.removeChild(choiceForm);
+		};
+		const enterManuallyButton = choiceForm.querySelector('#enter-manually');
+		enterManuallyButton.addEventListener('click', ev => {
+			ev.preventDefault();
+			ev.stopPropagation();
+			cleanup();
+		});
+
+		const importButton = choiceForm.querySelector('#import-from-biz-ops');
+
+		importButton.addEventListener('click', async ev => {
+			ev.preventDefault();
+			ev.stopPropagation();
+			const systemCode = form.querySelector('#import-system-code').value;
+			if (!systemCode) {
+				window.alert('Please enter a system code');
+				return;
+			}
+
+			const runbook = await fetch(
+				`/runbook.md/export?systemCode=${systemCode}`,
+			).then(res => res.text());
+
+			runbookContent.textContent = runbook;
+
+			cleanup();
+		});
+	}
+
+	// import-from-biz-ops
 
 	bizOpsToggle.forEach(toggle => {
 		toggle.addEventListener('change', ({ target }) => {
