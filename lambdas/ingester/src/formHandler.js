@@ -3,15 +3,24 @@ const querystring = require('qs');
 
 const { renderPage } = require('./lib/response');
 const { createLambda } = require('./lib/lambda');
-
+const { generate } = require('./lib/generate-from-biz-ops');
 const { ingest } = require('./commands/ingest');
 
 const template = require('./templates/form-input-page');
 const { default: placeholder } = require('../../../docs/example.md');
 
-const formHandler = event => {
+const formHandler = async event => {
 	logger.info({ event: 'RUNBOOK_INGEST_FORM_REQUEST' });
-	return renderPage(template, { layout: 'docs', placeholder }, event);
+	const { systemCode } = event.queryStringParameters || {};
+	return renderPage(
+		template,
+		{
+			layout: 'docs',
+			placeholder,
+			content: systemCode ? await generate(systemCode) : null,
+		},
+		event,
+	);
 };
 
 const formOutputHandler = async event => {
