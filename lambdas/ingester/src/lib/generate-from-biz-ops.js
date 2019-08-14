@@ -109,11 +109,9 @@ ${fields
 		field => `
 ## ${uncamelCase(field.name)}
 
-${outputValue(field)}
-`,
+${outputValue(field)}`,
 	)
-	.join('\n')}
-`;
+	.join('\n')}`;
 
 	return md;
 };
