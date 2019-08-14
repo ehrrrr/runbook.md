@@ -17,6 +17,7 @@ const formHandler = async event => {
 		{
 			layout: 'docs',
 			placeholder,
+			systemCode,
 			content: systemCode ? await generate(systemCode) : null,
 		},
 		event,
