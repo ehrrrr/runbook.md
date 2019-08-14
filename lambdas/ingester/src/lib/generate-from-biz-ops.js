@@ -71,9 +71,15 @@ ${data.description || '<!-- Enter a description  -->'}
 
 	const outputValue = ({ name, isRelationship, hasMany, type }) => {
 		if (name in data) {
-			return isRelationship && hasMany
-				? data[name].map(code => `- ${code}`).join('\n')
-				: data[name];
+			if (type === 'Boolean') {
+				return data[name] ? 'Yes' : 'No';
+			}
+
+			if (isRelationship && hasMany) {
+				return data[name].map(code => `- ${code}`).join('\n');
+			}
+
+			return data[name];
 		}
 
 		if (isRelationship) {
@@ -108,7 +114,6 @@ ${fields
 	.map(
 		field => `
 ## ${uncamelCase(field.name)}
-
 ${outputValue(field)}`,
 	)
 	.join('\n')}`;
