@@ -42,10 +42,10 @@ exports.generate = async systemCode => {
     Written in the format prescribed by https://github.com/Financial-Times/runbook.md.
     Any future edits should abide by this format.
 -->
+
 # ${data.name || '<!-- Enter a name  -->'}
 
-${data.description || '<!-- Enter a description  -->'}
-`;
+${data.description || '<!-- Enter a description  -->'}`;
 	delete data.name;
 	delete data.description;
 
@@ -109,7 +109,6 @@ Enter descriptive text, or delete this comment and the heading above
 	};
 
 	const md = `${preamble}
-
 ${fields
 	.map(
 		field => `
