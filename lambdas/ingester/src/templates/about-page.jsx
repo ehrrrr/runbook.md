@@ -7,7 +7,7 @@ const About = () => {
 			<GraphvizLibrary />
 			<aside>
 				<form
-					action="export"
+					action="/runbook.md"
 					method="GET"
 					className="o-forms o-forms-field"
 				>
