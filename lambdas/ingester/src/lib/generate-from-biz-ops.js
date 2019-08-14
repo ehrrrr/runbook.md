@@ -6,6 +6,7 @@ const desirableFields = [
 	'primaryURL',
 	'replaces',
 	'hostPlatform',
+	'architecture',
 	'containsPersonalData',
 	'containsSensitiveData',
 	'deliveredBy',
@@ -24,6 +25,8 @@ const desirableFields = [
 	'rollbackProcessType',
 	'keyManagementProcessType',
 	'keyManagementDetails',
+	'firstLineTroubleshooting',
+	'secondLineTroubleshooting',
 ];
 
 const uncamelCase = str =>
