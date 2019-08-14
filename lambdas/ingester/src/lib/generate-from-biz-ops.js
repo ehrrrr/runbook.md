@@ -42,7 +42,6 @@ exports.generate = async systemCode => {
     Written in the format prescribed by https://github.com/Financial-Times/runbook.md.
     Any future edits should abide by this format.
 -->
-
 # ${data.name || '<!-- Enter a name  -->'}
 
 ${data.description || '<!-- Enter a description  -->'}`;
