@@ -29,8 +29,6 @@ const formOutputHandler = async event => {
 
 	const formData = event.body;
 	const jsonFormData = querystring.parse(formData);
-	jsonFormData.writeToBizOps = jsonFormData.writeToBizOps === 'yes';
-
 	const responseProperties = { status: 200 };
 
 	try {

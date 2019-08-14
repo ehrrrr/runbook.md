@@ -4,3 +4,4 @@ dist/
 .env
 .serverless/
 .DS_Store
+.stylelintcache

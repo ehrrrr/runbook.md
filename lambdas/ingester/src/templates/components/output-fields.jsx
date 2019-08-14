@@ -40,7 +40,7 @@ exports.UpdatedFields = ({ data }) => {
 
 exports.ParseSuccess = ({ data }) => {
 	const tableProps = {
-		caption: 'Parsed Successfully',
+		caption: 'Parse Successes',
 		columns: ['Property', 'Value'],
 		rows: Object.entries(data),
 	};

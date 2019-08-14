@@ -1,20 +1,12 @@
 const { h, Fragment } = require('hyperons');
 
-const {
-	SystemCode,
-	WriteFlag,
-	ApiKey,
-	RunbookEntry,
-	RunbookImport,
-} = require('./components/input-fields');
+const { RunbookEntry, RunbookImport } = require('./components/input-fields');
 
 const { ValidationResult } = require('./components/validation-result');
 
 const ValidateForm = ({
 	status,
 	systemCode,
-	writeToBizOps,
-	bizOpsApiKey,
 	placeholder,
 	readOnly,
 	content,
@@ -64,11 +56,7 @@ const ValidateForm = ({
 
 			<aside>
 				<p>
-					If you have enabled writing to Biz-Ops, this action will
-					also update any valid System fields.
-				</p>
-				<p className="runbook-form__submit--error">
-					Please complete all fields before submitting.
+					Submit to validate and get an SOS score for your runbook.md
 				</p>
 				<button
 					className="o-buttons o-buttons--primary o-buttons--mono o-buttons--big"
@@ -78,20 +66,19 @@ const ValidateForm = ({
 					{readOnly ? `Resubmit` : `Submit`}
 				</button>
 			</aside>
-			<h2 id="biz-ops-settings">Update Biz-Ops</h2>
-			<div className="o-grid-row">
-				<div data-o-grid-colspan="12">
-					<WriteFlag writeToBizOps={writeToBizOps} />
-				</div>
-			</div>
-			<div className="o-grid-row">
-				<div data-o-grid-colspan="6">
-					<SystemCode systemCode={systemCode} />
-				</div>
-				<div data-o-grid-colspan="6">
-					<ApiKey bizOpsApiKey={bizOpsApiKey} />
-				</div>
-			</div>
+			<h2>What next?</h2>
+			<p>
+				Once you&apos;re happy with what you&apos;ve written here, save
+				it as `RUNBOOK.md` in your project repository. You will also
+				need to hook your project up to{' '}
+				<a href="https://github.com/Financial-Times/change-api#integration-examples">
+					Change API
+				</a>
+				. Any production releases which also include changes to the
+				`RUNBOOK.md` content will then automatically result in Biz Ops
+				and <a href="https://runbooks.in.ft.com">runbooks.in.ft.com</a>{' '}
+				being updated with the new information.
+			</p>
 		</form>
 	</Fragment>
 );
