@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  runbookMdResultsDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: "Repository"
+          AttributeType: "S"
+        -
+          AttributeName: "CommitHash"
+          AttributeType: "S"
+      KeySchema:
+        -
+          AttributeName: "Repository"
+          KeyType: "HASH"
+        -
+          AttributeName: "CommitHash"
+          KeyType: "RANGE"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "1"
+        WriteCapacityUnits: "1"
+      SSESpecification:
+        SSEEnabled: true
+      TableName: "biz-ops-runbook-md.results"

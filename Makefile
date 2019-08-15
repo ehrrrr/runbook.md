@@ -91,3 +91,13 @@ run-web: clean
 
 move-asset-manifest:
 	[ -f "./dist/browser/manifest.json" ] && mv "./dist/browser/manifest.json" ./lambdas/ingester/src/assets/
+
+create-database:
+	aws cloudformation create-stack \
+	--region eu-west-1 \
+	--stack-name biz-ops-runbooks-md-data \
+	--template-body file://$$(pwd)/cloudformation/dynamodb.yaml \
+	--tags Key=description,Value="Data store for pull request evaulations of runbook.md files in repos" \
+	Key=systemCode,Value=yakfly \
+	Key=environment,Value=$$ENVIRONMENT_TAG \
+	Key=teamDL,Value=reliability.engineering@ft.com
