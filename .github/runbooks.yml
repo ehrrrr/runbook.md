@@ -1,0 +1,3 @@
+runbooks:
+    exclude:
+        - 'rx:docs/'
