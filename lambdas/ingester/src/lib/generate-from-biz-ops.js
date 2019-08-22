@@ -66,7 +66,10 @@ ${data.description || '<!-- Enter a description  -->'}`;
 			),
 		)
 		.filter(({ name }) => name in data || desirableFields.includes(name))
-		.filter(({ name }) => !excludedProperties.includes(name));
+		.filter(
+			({ name, deprecationReason }) =>
+				!deprecationReason && !excludedProperties.includes(name),
+		);
 
 	const outputValue = ({ name, isRelationship, hasMany, type }) => {
 		if (name in data) {
