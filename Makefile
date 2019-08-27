@@ -68,25 +68,29 @@ build-statics:
 		else make build-production-assets; \
 	fi
 
-check-stream-container-is-running:
-	$(shell docker inspect --format '{{.State.Running}}' localstreams) = true
-
-check-stream-exists:
-	aws --region eu-west-1 --no-verify-ssl --endpoint-url=http://localhost:4567 kinesis list-streams | grep -q change-request-api-test-enriched-stream
-
-run-local-message-stream:
-	@if ! make check-stream-container-is-running; then \
+run-local-stream-container:
+	# if there is no localstreams container running, 
+	# first check if an exited container blocks (and remove it)
+	# then run the container with the kinesalite kinesis emulator 
+	# see https://docs.docker.com/engine/reference/commandline/ps/
+	@if [ -z "$(shell docker ps -q -f name=^/localstreams$)" ]; then \
+		if [ "$(shell docker ps -aq -f status=exited -f name=^/localstreams$)" ]; then \
+				docker rm localstreams; \
+		fi; \
 		docker run -d --name localstreams -p 4567:4567 instructure/kinesalite; \
-	fi
-	if ! make check-stream-exists; then \
+	fi;
+
+emulate-local-kinesis-stream:
+	@if [ -z "$(shell aws --region eu-west-1 --no-verify-ssl \
+	--endpoint-url=http://localhost:4567 kinesis list-streams \
+	| grep change-request-api-test-enriched-stream)" ]; then \
 		aws --region eu-west-1 --no-verify-ssl --endpoint-url=http://localhost:4567 kinesis \
 			create-stream --stream-name change-request-api-test-enriched-stream --shard-count 1; \
-	fi
+	fi	
+
+run-local-message-stream: run-local-stream-container emulate-local-kinesis-stream
 
 run: clean run-local-message-stream
-	@concurrently "make build-statics" "make serverless-offline"
-
-run-web: clean
 	@concurrently "make build-statics" "make serverless-offline"
 
 move-asset-manifest:
