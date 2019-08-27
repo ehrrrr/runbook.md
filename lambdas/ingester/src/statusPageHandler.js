@@ -1,4 +1,4 @@
-const logger = require('@financial-times/lambda-logger');
+const lambdaLogger = require('@financial-times/lambda-logger');
 const { get: getStoredResult } = require('./lib/dynamodb-client');
 const { renderPage } = require('./lib/response');
 const { createLambda } = require('./lib/lambda');
@@ -6,60 +6,63 @@ const { createLambda } = require('./lib/lambda');
 const template = require('./templates/status-page');
 
 const statusPageHandler = async event => {
-	logger.info({ event: 'STATUS_PAGE' });
-
 	const { owner, repo, hash } = event.pathParameters;
+	const { commitSha } = event.queryStringParameters;
 	const repository = `${owner}/${repo}`;
 
-	logger.info({ event: 'STATUS_PAGE_FETCHING_STORED_RESULT', hash });
+	const logger = lambdaLogger.child({
+		reporter: 'STATUS_PAGE',
+		repository,
+		runbookSha: hash,
+		commitSha,
+	});
+
 	try {
-		const storedResult = await getStoredResult(repository, hash);
+		const [storedResult, { checkRunUrl }] = await Promise.all([
+			getStoredResult(repository, hash),
+			getStoredResult(repository, commitSha).catch(error => {
+				logger.error({
+					event: 'NO_CHECK_RUN_URL',
+					error,
+				});
+				return {};
+			}),
+		]);
+
 		logger.info({
-			event: 'STATUS_PAGE_RETRIEVED_STORED_RESULT',
-			storedResult,
-			hash,
+			event: 'RETRIEVED_STORED_RESULT',
 		});
 
-		const { status, content, details, runbookUrl } = storedResult;
-		const commitUrl = `https://github.com/${owner}/${repo}/commit/${hash}`;
+		const {
+			details: { validationErrors = [] } = {},
+			commitSha: originalCommitSha,
+		} = storedResult;
 
-		const errors = {
-			parse: (details.parseErrors || []).length,
-			validation: Object.keys(details.validationErrors || {}).length,
-		};
+		const commitUrl = `https://github.com/${owner}/${repo}/commit/${originalCommitSha}`;
 
-		const alert = {
-			message:
-				status === 'success'
-					? 'RUNBOOK.MD parsed successfully'
-					: `Invalid RUNBOOK.MD: ${errors.parse} parse errors`,
-			alertState: errors.validation ? 'neutral' : status,
-		};
-
-		if (errors.validation) {
-			alert.message += `, with ${errors.validation} validation errors or notifications`;
-		}
+		const alertState =
+			storedResult.state === 'success' &&
+			Object.keys(validationErrors).length
+				? 'neutral'
+				: storedResult.state;
 
 		return renderPage(
 			template,
 			{
 				layout: 'docs',
-				...alert,
+				...storedResult,
+				alertState,
 				owner,
 				repo,
-				hash,
 				commitUrl,
-				runbookUrl,
-				content,
-				...details,
+				checkRunUrl,
 			},
 			event,
 		);
 	} catch (error) {
 		logger.error({
-			event: 'STATUS_PAGE_FAILED_FETCH_STORED_RESULT',
-			error: { ...error },
-			hash,
+			event: 'FAILED_FETCH_STORED_RESULT',
+			error,
 		});
 		// TODO error handling
 	}

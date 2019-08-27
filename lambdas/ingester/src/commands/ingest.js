@@ -26,29 +26,30 @@ const decorateError = props => {
 	return error;
 };
 
-const ingest = async (username, payload) => {
+const ingest = async payload => {
 	const {
 		content: rawRunbook,
-		writeToBizOps,
+		shouldWriteToBizOps,
 		systemCode,
 		bizOpsApiKey,
 	} = payload;
 	if (!rawRunbook) {
-		throw decorateError({ message: 'Please supply RUNBOOK.md content' });
+		throw decorateError({
+			message: 'Runbook contents not supplied.',
+			code: 'no-content',
+		});
 	}
 	const content = stripHtmlComments(rawRunbook);
 	// parse RUNBOOK.MD to JSON to return {data, errors}
 	const parseResult = await runbookMd.parseRunbookString(content);
 	// validate codes in JSON against the Biz Ops to return {expandedData, errors}
-	const expandedResult = await transformCodesIntoNestedData(
-		username,
-		parseResult.data,
-	);
+	const expandedResult = await transformCodesIntoNestedData(parseResult.data);
 
 	parseResult.errors.push(...expandedResult.errors);
 	if (parseResult.errors.length) {
 		throw decorateError({
-			message: 'Parse Failures. Please correct and resubmit',
+			message: 'Failed to parse runbook.',
+			code: 'parse-error',
 			details: transformIngestedDetails(parseResult),
 		});
 	}
@@ -60,10 +61,10 @@ const ingest = async (username, payload) => {
 
 	const details = transformIngestedDetails(parseResult, validationResult);
 
-	if (!writeToBizOps || writeToBizOps === 'no') {
+	if (!shouldWriteToBizOps || shouldWriteToBizOps === 'no') {
 		return {
-			message:
-				'Parse & Validation Complete. Biz Ops Was NOT Updated as you did not enable the writeToBizOps flag.',
+			message: 'Parse & validation complete. Biz-Ops update skipped.',
+			code: 'parse-ok-update-skipped',
 			details,
 		};
 	}
@@ -71,29 +72,33 @@ const ingest = async (username, payload) => {
 	// we don't need systemCode until this point
 	if (!systemCode) {
 		throw decorateError({
-			message: 'Please supply a systemCode',
+			message:
+				'Parse & validation complete. Biz-Ops update skipped (no system code supplied).',
+			code: 'parse-ok-systemCode-missing',
 			details,
 		});
 	}
 
 	if (!bizOpsApiKey) {
 		throw decorateError({
-			message: 'Please supply a Biz-Ops API key',
+			message:
+				'Parse & validation complete. Biz-Ops update skipped (no API key supplied).',
+			code: 'parse-ok-apiKey-missing',
 			details,
 		});
 	}
 
 	const { status, json: response } = await updateBizOps(
-		username,
 		bizOpsApiKey,
 		systemCode,
 		parseResult.data,
 	);
 
 	if (status !== 200) {
-		return decorateError({
+		throw decorateError({
 			status,
-			message: `Biz Ops update failed (status ${status})`,
+			message: `Parse & validation complete. Biz-Ops update failed (status ${status}).`,
+			code: 'parse-ok-update-error',
 			response,
 			details,
 		});
@@ -101,7 +106,8 @@ const ingest = async (username, payload) => {
 
 	return {
 		status,
-		message: `Biz Ops has been updated.`,
+		message: `Parse & validation complete. Biz-Ops update successful.`,
+		code: 'parse-ok-update-ok',
 		details: transformIngestedDetails(
 			parseResult,
 			validationResult,

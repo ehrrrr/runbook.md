@@ -1,28 +1,8 @@
 const nock = require('nock');
-const path = require('path');
-const fs = require('fs');
 const { handler } = require('../src/releaseLogHandler');
+
+const { runbook: runbookFixture, sos: sosFixture } = require('./fixtures');
 const kinesisFixture = require('./fixtures/kinesis');
-const sosFixture = require('./fixtures/sos.json');
-
-const runbookFixture = fs.readFileSync(
-	path.join(__dirname, './fixtures/runbook-fixture.md'),
-);
-
-jest.mock('../src/lib/get-configured-schema', () => {
-	// eslint-disable-next-line global-require
-	const schema = require('@financial-times/biz-ops-schema/lib/get-instance.js').init(
-		{
-			// eslint-disable-next-line global-require
-			rawData: require('./fixtures/bizOpsSchema.json'),
-		},
-	);
-	schema.configure({
-		baseUrl: global.process.env.SCHEMA_BASE_URL,
-		updateMode: 'dev',
-	});
-	return schema;
-});
 
 describe('Release log handler', () => {
 	beforeAll(() => {

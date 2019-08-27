@@ -1,0 +1,51 @@
+# These settings determine the behaviour of runbook.md's Runbook Validator bot
+# https://github.com/financial-times/runbook.md
+
+# Everything below is optional
+
+runbooks:
+    # All available settings are listed below
+
+    # Disable checks for this repo
+    # defaults to `false`
+    disabled: false
+
+    ### SUPPORT FOR MULTIPLE RUNBOOKS IN A SINGLE REPOSITORY
+
+    # Fail checks if `any` | `all` | `none` runbooks fail validation
+    # defaults to `any`
+    failOn: any
+
+    # an array of paths to exclude from processing (and Biz-Ops updates, if enabled)
+    # wrap paths in single quotes
+    # RegExp strings supported (prefixed rx:), see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
+    exclude:
+        - 'rx:test/fixtures'
+
+    ### SUPPORT FOR UPDATING BIZ-OPS
+
+    # Update valid Biz-Ops runbooks on merge to a specific branch
+    #### IF YOUR DEPLOYMENTS ARE AUTOMATED (CircleCI, Heroku Pipelines)
+    #### PLEASE INTEGRATE WITH CHANGE-API INSTEAD
+    #### https://github.com/Financial-Times/change-api#change-api---v2
+    # defaults to `false`
+    updateOnMerge: false
+
+    # Merges to this branch trigger Biz-Ops updates updateOnMerge is `true`
+    # defaults to `master`
+    updateBranch: master
+
+    # an array of paths to exclude from Biz-Ops updates (runbooks are still processed)
+    # wrap paths in single quotes
+    # RegExp strings supported (prefixed rx:), see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
+    excludeFromUpdate:
+        - 'example-runbook.md'
+
+    ### UPDATING BIZ-OPS REQUIRES EACH RUNBOOK TO BE TIED TO A VALID SYSTEM CODE
+    # Mappings between paths and system codes
+    # unless a custom mapping is specified here
+    # runbook.md tries to parse the system code from the runbook's filename (format: my-sys-code_runbook.md)
+    systemCodes:
+        # paths are relative to root, omitting ./ (case-insensitive)
+        biz-ops-runbook-md: RUNBOOK.MD
+        my-system-code: docs/example-runbook.md

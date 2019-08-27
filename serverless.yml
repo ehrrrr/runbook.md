@@ -131,7 +131,7 @@ functions:
     timeout: 30
     events:
       - http:
-          path: /webhook
+          path: /runbook.md/webhook
           method: post
 
 plugins:

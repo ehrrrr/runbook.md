@@ -15,7 +15,7 @@ exports.ValidationResult = ({
 	status,
 	alertState,
 	weightedScore,
-	writeToBizOps,
+	shouldWriteToBizOps,
 	systemCode,
 	message,
 	parseData = {},
@@ -49,12 +49,12 @@ exports.ValidationResult = ({
 						message={message}
 						linkText={
 							status === 200 &&
-							writeToBizOps &&
+							shouldWriteToBizOps &&
 							'View updated Biz Ops record'
 						}
 						linkUrl={
 							status === 200 &&
-							writeToBizOps &&
+							shouldWriteToBizOps &&
 							`${BIZ_OPS_URL}/System/${systemCode}`
 						}
 					/>

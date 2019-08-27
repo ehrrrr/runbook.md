@@ -7,10 +7,9 @@ const bizOpsValidation = require('../src/lib/code-validation');
 
 const { ingest } = require('../src/commands/ingest');
 
-const s3oUsername = 'dummyUser';
 const payload = {
 	systemCode: 'system-code',
-	writeToBizOps: false,
+	shouldWriteToBizOps: false,
 	bizOpsApiKey: 'dummyKey',
 	content: '# this is a name\ndescription\n## service tier\nbronze',
 };
@@ -20,7 +19,7 @@ describe('ingest command', () => {
 		const testPayload = { ...payload, ...payloadOverrides };
 		let result;
 		try {
-			result = await ingest(s3oUsername, testPayload);
+			result = await ingest(testPayload);
 		} catch (error) {
 			result = error;
 			result.rejected = true;
@@ -50,13 +49,13 @@ describe('ingest command', () => {
 	describe('when all parameters are provided', () => {
 		test('parses, validates and imports to biz-ops', async () => {
 			const { result, parseData } = await runIngest({
-				writeToBizOps: true,
+				shouldWriteToBizOps: true,
 			});
 			expect(spies.transformCodesIntoNestedData).toHaveBeenCalled();
 			expect(spies.validate).toHaveBeenCalled();
 			expect(spies.updateBizOps).toHaveBeenCalled();
 			expect(result).toMatchObject({
-				message: expect.stringMatching('Biz Ops has been updated'),
+				code: expect.stringMatching('parse-ok-update-ok'),
 				details: {
 					parseData,
 				},
@@ -71,9 +70,7 @@ describe('ingest command', () => {
 			});
 			expect(result).toMatchObject({
 				rejected: true,
-				message: expect.stringMatching(
-					'Please supply RUNBOOK.md content',
-				),
+				code: expect.stringMatching('no-content'),
 			});
 		});
 	});
@@ -84,7 +81,7 @@ describe('ingest command', () => {
 				systemCode: undefined,
 			});
 			expect(result).toMatchObject({
-				message: expect.stringMatching('Parse & Validation Complete'),
+				code: expect.stringMatching('parse-ok-update-skipped'),
 				details: {
 					parseData,
 				},
@@ -94,11 +91,11 @@ describe('ingest command', () => {
 		test('and writing to biz-ops is enabled, fail', async () => {
 			const { result, parseData } = await runIngest({
 				systemCode: undefined,
-				writeToBizOps: true,
+				shouldWriteToBizOps: true,
 			});
 			expect(result).toMatchObject({
 				rejected: true,
-				message: expect.stringMatching('Please supply a systemCode'),
+				code: expect.stringMatching('parse-ok-systemCode-missing'),
 				details: {
 					parseData,
 				},
@@ -112,7 +109,7 @@ describe('ingest command', () => {
 				bizOpsApiKey: undefined,
 			});
 			expect(result).toMatchObject({
-				message: expect.stringMatching('Parse & Validation Complete'),
+				code: expect.stringMatching('parse-ok-update-skipped'),
 				details: {
 					parseData,
 				},
@@ -122,13 +119,11 @@ describe('ingest command', () => {
 		test('and writing to biz-ops is enabled, fail', async () => {
 			const { result, parseData } = await runIngest({
 				bizOpsApiKey: undefined,
-				writeToBizOps: true,
+				shouldWriteToBizOps: true,
 			});
 			expect(result).toMatchObject({
 				rejected: true,
-				message: expect.stringMatching(
-					'Please supply a Biz-Ops API key',
-				),
+				code: expect.stringMatching('parse-ok-apiKey-missing'),
 				details: {
 					parseData,
 				},

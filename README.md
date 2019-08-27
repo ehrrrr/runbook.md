@@ -27,7 +27,7 @@ The [runbook.md github app](https://github.com/organizations/Financial-Times/set
 
 This utility allows manual upload of a RUNBOOK.md file for validation and [operability scoring](https://github.com/Financial-Times/system-operability-score). Optionally, the tool can be used to populate associated critical fields in Biz Ops based on the content of a _valid runbook_.
 
-See an example of the format/content of a RUNBOOK.md file [here](./docs/example.md).
+See an example of the format/content of a RUNBOOK.md file [here](./docs/example-runbook.md).
 
 ## System (business logic) overview
 

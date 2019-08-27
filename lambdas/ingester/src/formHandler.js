@@ -7,7 +7,7 @@ const { generate } = require('./lib/generate-from-biz-ops');
 const { ingest } = require('./commands/ingest');
 
 const template = require('./templates/form-input-page');
-const { default: placeholder } = require('../../../docs/example.md');
+const { default: placeholder } = require('../../../docs/example-runbook.md');
 
 const formHandler = async event => {
 	logger.info({ event: 'RUNBOOK_INGEST_FORM_REQUEST' });
@@ -33,7 +33,7 @@ const formOutputHandler = async event => {
 
 	try {
 		logger.info({ event: 'MANUAL_RUNBOOK_CHECK_START' });
-		const ingestJson = await ingest(event.s3oUsername, jsonFormData);
+		const ingestJson = await ingest(jsonFormData);
 		logger.info({
 			event: 'MANUAL_RUNBOOK_CHECK_SUCCESFUL',
 			response: ingestJson,

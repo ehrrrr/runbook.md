@@ -1,11 +1,11 @@
-const logger = require('@financial-times/lambda-logger');
+const https = require('https');
+const lambdaLogger = require('@financial-times/lambda-logger');
 const httpError = require('http-errors');
 const nodeFetch = require('isomorphic-fetch');
-const https = require('https');
 
 const keepAliveAgent = new https.Agent({ keepAlive: true });
 
-const API_KEY_HEADER_NAME = 'x-api-key';
+const { BIZ_OPS_API_URL, SOS_URL } = process.env;
 
 const callExternalApi = async ({
 	name,
@@ -13,97 +13,81 @@ const callExternalApi = async ({
 	url,
 	payload,
 	headers,
-	expectedStatuses = [200],
+	expectedStatusCodes = [200],
 }) => {
 	const options = {
 		method,
 		body: JSON.stringify(payload),
 		headers,
-	};
-	const fetchResponse = await nodeFetch(url, {
-		...options,
 		agent: keepAliveAgent,
-	});
-	if (!expectedStatuses.includes(fetchResponse.status)) {
-		logger.error(
-			{ event: `Attempt to ${method} to ${url}`, options },
-			`Failed with ${fetchResponse.status}:${fetchResponse}`,
-		);
-		throw httpError(
-			fetchResponse.status,
-			`Attempt to access ${name} ${url} failed with ${fetchResponse.statusText}`,
-		);
+		timeout: 2000,
+	};
+	const event = `${name}_${method}`;
+	const logger = lambdaLogger.child({ event, url });
+	try {
+		const fetchResponse = await nodeFetch(url, options);
+		const { status, statusText } = fetchResponse;
+		if (!expectedStatusCodes.includes(status)) {
+			logger.error({ status }, `Failed with ${status}: ${statusText}`);
+			throw httpError(
+				status,
+				`${name} ${method} to ${url} failed with ${statusText}`,
+			);
+		}
+		logger.info({ status }, `Responded with ${status}: ${statusText}`);
+		return { status, json: await fetchResponse.json() };
+	} catch (error) {
+		logger.error({ error, status: 500 });
+		throw httpError(500, `BadRequest: ${name} ${method} to ${url}`);
 	}
-	// must not log confidential runbook data and PII...
-	delete options.body;
-	if (options.headers) {
-		delete options.headers[API_KEY_HEADER_NAME];
-	}
-	logger.info(
-		{ event: `${method} request to ${url}`, options },
-		`Waiting for ${name} response`,
-	);
-	return { status: fetchResponse.status, json: await fetchResponse.json() };
 };
 
-const validate = async request =>
+const validate = payload =>
 	callExternalApi({
-		name: 'SOS validate',
+		name: 'SOS_VALIDATE',
 		method: 'POST',
-		url: `${process.env.SOS_URL}/api/v1/validate`,
-		payload: request,
+		url: `${SOS_URL}/api/v1/validate`,
+		payload,
 	}).then(({ status, json }) => {
 		// Remove any errors which are not directly attributable to the System properties
-		Object.entries(json.errorProperties).forEach(
-			([name, errorProperties]) => {
-				if (
-					errorProperties.filter(
-						({ key }) => key.slice(0, 7) === 'System/',
-					).length === 0
-				) {
-					delete json.errorMessages[name];
-				}
-			},
-		);
+		Object.entries(json.errorProperties).forEach(([name, properties]) => {
+			if (![properties].some(({ key }) => /^System\//.test(key))) {
+				delete json.errorMessages[name];
+			}
+		});
 		return { status, json };
 	});
 
-const updateBizOps = async (username, apiKey, systemCode, content) => {
-	const queryString = `?relationshipAction=replace&lockFields=${Object.keys(
-		content,
-	)
-		.map(name => name)
-		.join(',')}`;
-	return callExternalApi({
-		name: 'Biz Ops Update',
-		method: 'PATCH',
-		url: `${process.env.BIZ_OPS_API_URL}/v2/node/System/${systemCode}${queryString}`,
-		payload: content,
-		headers: {
-			[API_KEY_HEADER_NAME]: apiKey,
-			'client-id': 'biz-ops-runbook-md',
-			'content-type': 'application/json',
-			'client-user-id': username,
-		},
-		expectedStatuses: [200, 400, 403],
-	});
+const getBizOpsHeaders = apiKey => {
+	const headers = {
+		'x-api-key': apiKey,
+		'client-id': 'biz-ops-runbook-md',
+		'content-type': 'application/json',
+	};
+	return headers;
 };
 
-const queryBizOps = async (username, apiKey, query) => {
-	return callExternalApi({
-		name: 'Biz Ops GraphQL',
-		method: 'POST',
-		url: `${process.env.BIZ_OPS_API_URL}/graphql`,
-		payload: { query },
-		headers: {
-			[API_KEY_HEADER_NAME]: apiKey,
-			'client-id': 'biz-ops-runbook-md',
-			'content-type': 'application/json',
-			'client-user-id': username,
-		},
-		expectedStatuses: [200, 404],
+const updateBizOps = (apiKey, systemCode, payload) =>
+	callExternalApi({
+		name: 'BIZ_OPS_REST',
+		method: 'PATCH',
+		url: `${BIZ_OPS_API_URL}/v2/node/System/${systemCode}?relationshipAction=replace&lockFields=${Object.keys(
+			payload,
+		).join(',')}`,
+		payload,
+		headers: getBizOpsHeaders(apiKey),
+		expectedStatusCodes: [200, 400, 403],
 	});
-};
+
+const queryBizOps = (apiKey, query) =>
+	callExternalApi({
+		name: 'BIZ_OPS_GRAPHQL',
+		method: 'POST',
+		url: `${BIZ_OPS_API_URL}/graphql`,
+		payload: { query },
+		headers: getBizOpsHeaders(apiKey),
+		expectedStatusCodes: [200, 404],
+	});
 
 module.exports = {
 	validate,

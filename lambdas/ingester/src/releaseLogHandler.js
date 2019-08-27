@@ -4,62 +4,11 @@ const https = require('https');
 const { createLambda } = require('./lib/lambda');
 const { ingest } = require('./commands/ingest');
 const { json } = require('./lib/response');
+const { decodeBase64 } = require('./lib/type-helpers');
+const { parseKinesisRecord } = require('./lib/kinesis-util');
 
 const githubApiUrl = `https://api.github.com`;
 const bizOpsApiKey = process.env.BIZ_OPS_API_KEY;
-
-const decodeBase64 = string => Buffer.from(string, 'base64').toString('utf8');
-
-const parseKinesisRecord = childLogger => (record = {}) => {
-	const RECEIVED_CHANGE_API_RECORD = 'RECEIVED_CHANGE_API_RECORD';
-	const { eventSource, eventID, kinesis: { data } = {} } = record;
-
-	const log = childLogger.child({
-		eventID,
-	});
-
-	if (eventSource !== 'aws:kinesis') {
-		log.info(
-			{
-				event: 'UNRECOGNISED_EVENT_SOURCE',
-				record,
-			},
-			'Event source was not Kinesis',
-		);
-		return {
-			eventID: record.eventID,
-		};
-	}
-
-	let payload;
-	try {
-		payload = JSON.parse(decodeBase64(data));
-
-		log.debug(
-			{
-				event: RECEIVED_CHANGE_API_RECORD,
-				payload,
-			},
-			'Received kinesis record',
-		);
-	} catch (error) {
-		log.error(
-			{
-				event: RECEIVED_CHANGE_API_RECORD,
-				...error,
-			},
-			'Record parsing has failed',
-		);
-		return {
-			eventID: record.eventID,
-		};
-	}
-
-	return {
-		...payload,
-		eventID: record.eventID,
-	};
-};
 
 const filterValidKinesisRecord = childLogger => (record = {}) => {
 	const { commit, eventID } = record;
@@ -189,25 +138,18 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 				});
 				return false;
 			})
-			.map(async ({ user, systemCode, content, eventID }) => {
+			.map(async ({ systemCode, content, eventID }) => {
 				const fetchRunbookLogger = childLogger.child({ eventID });
 
 				try {
-					if (!user) {
-						throw new Error(
-							'Missing FT username when ingesting runbook',
-						);
-					}
 					fetchRunbookLogger.info({
 						event: 'INGEST_RUNBOOK_MD_START',
 					});
 
-					const userName = user.split('@')[0];
-
-					const result = await ingest(userName, {
+					const result = await ingest({
 						systemCode,
 						content,
-						writeToBizOps: true,
+						shouldWriteToBizOps: true,
 						bizOpsApiKey,
 					});
 
@@ -222,7 +164,6 @@ const ingestRunbookMDs = (runbookMDs, childLogger) =>
 						{
 							event: 'INGEST_RUNBOOK_MD_FAILED',
 							error,
-							user,
 							systemCode,
 						},
 						`Ingesting runbook has failed for ${systemCode}.`,
@@ -239,7 +180,6 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				commit,
 				systemCode,
 				githubData: { htmlUrl: gitRefUrl },
-				user,
 				eventID,
 			} = record;
 
@@ -309,7 +249,6 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				return {
 					systemCode,
 					content: runbookContent,
-					user: user.email,
 					eventID,
 				};
 			} catch (error) {
@@ -383,7 +322,7 @@ const handler = async (event, context) => {
 	});
 
 	const parsedRecords = event.Records.map(
-		parseKinesisRecord(childLogger),
+		parseKinesisRecord(childLogger, 'RECEIVED_CHANGE_API_EVENT'),
 	).filter(filterValidKinesisRecord(childLogger));
 
 	if (parsedRecords.length === 0) {
@@ -398,14 +337,13 @@ const handler = async (event, context) => {
 		});
 	}
 
-	parsedRecords.forEach(({ commit, systemCode, user, eventID }) => {
+	parsedRecords.forEach(({ commit, systemCode, eventID }) => {
 		childLogger.info(
 			{
 				event: 'BEGIN_PROCESSING_RELEASE_RECORD',
 				record: {
 					commit,
 					systemCode,
-					user,
 					eventID,
 				},
 			},

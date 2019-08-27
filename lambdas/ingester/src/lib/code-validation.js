@@ -109,7 +109,7 @@ const replaceCodesWithData = (systemSchema, data, bizOpsData) => {
 	return expandedData;
 };
 
-const transformCodesIntoNestedData = async (username, data) => {
+const transformCodesIntoNestedData = async data => {
 	const systemSchema = schema.getTypes().find(type => type.name === 'System');
 	const uniqueBizOpsCodes = getTypesAndCodesFromRelationships(
 		systemSchema,
@@ -120,7 +120,6 @@ const transformCodesIntoNestedData = async (username, data) => {
 	}
 	const { query, propertyMappings } = buildGraphQLQuery(uniqueBizOpsCodes);
 	const { json: bizOpsResponse } = await queryBizOps(
-		username,
 		process.env.BIZ_OPS_API_KEY,
 		query,
 	);

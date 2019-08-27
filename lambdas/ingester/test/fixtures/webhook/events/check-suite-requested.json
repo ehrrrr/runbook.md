@@ -1,0 +1,34 @@
+{
+	"action": "requested",
+	"check_suite": {
+		"id": 123,
+		"node_id": "BASE64_STRING",
+		"head_branch": "dora/multi-runbook-support",
+		"head_sha": "38323c9da6e258e687394afd02470753204d8e73",
+		"status": "queued",
+		"conclusion": null,
+		"url": "https://api.github.com/repos/Financial-Times/runbook.md/check-suites/123",
+		"latest_check_runs_count": 0,
+		"check_runs_url": "https://api.github.com/repos/Financial-Times/runbook.md/check-suites/123/check-runs",
+		"head_commit": {
+			"id": "38323c9da6e258e687394afd02470753204d8e73",
+			"tree_id": "0ca04ae6d32d5c09c2eee5c419ee0bfcdf1beed5",
+			"message": "store ingest results individually",
+			"timestamp": "2019-08-20T12:54:53Z",
+			"author": {
+				"name": "doramatadora",
+				"email": "EMAIL_ADDRESS"
+			},
+			"committer": {
+				"name": "doramatadora",
+				"email": "EMAIL_ADDRESS"
+			}
+		}
+	},
+	"repository": {
+		"name": "runbook.md",
+		"owner": {
+			"login": "Financial-Times"
+		}
+	}
+}
