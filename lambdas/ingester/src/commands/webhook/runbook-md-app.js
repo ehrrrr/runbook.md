@@ -18,6 +18,7 @@ class RunbookMdApp extends IngestSummariser {
 		if (!this.results) {
 			this.summariseResults();
 		}
+
 		const { conclusion, title, summary, text } = this.results;
 
 		const childLogger = this.logger.child({
@@ -44,7 +45,6 @@ class RunbookMdApp extends IngestSummariser {
 
 			childLogger.info({
 				event: 'CREATE_CHECK_SUCCESS',
-				checkRunUrl,
 			});
 			// store the check run url
 			// for status page navigation
@@ -57,11 +57,13 @@ class RunbookMdApp extends IngestSummariser {
 				failed,
 				total,
 			});
+			return true;
 		} catch (error) {
 			childLogger.error({
 				event: 'CREATE_CHECK_FAILED',
 				error,
 			});
+			return false;
 		}
 	}
 }

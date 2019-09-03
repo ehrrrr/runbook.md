@@ -58,13 +58,20 @@ const About = () => {
 				<p />
 				<h3 id="github-app">The GitHub App</h3>
 				The github app can be installed in any repository. This will
-				give feedback on any PR about the quality of RUNBOOK.md&apos;s
-				content. Visit{' '}
+				give feedback on any commit about the quality of runbooks in the
+				repository. For manual release processes or multi-system
+				repositories, where integrating with{' '}
+				<a href="#changeapi">Change API</a> is not possible, the GitHub
+				app supports{' '}
+				<a href="https://github.com/Financial-Times/runbook.md/blob/master/docs/example-runbooks.yml">
+					custom configuration
+				</a>{' '}
+				for updating system information in Biz-Ops. Visit{' '}
 				<a href="https://github.com/organizations/Financial-Times/settings/installations/1210233">
 					the github app page and add your repository
 				</a>{' '}
-				if you would like to try it out. We will probably install it
-				globally once it&apos;s been tried by a few different projects
+				if you would like to try it out. We will install it globally
+				once it&apos;s been tried by a few different projects.
 				<p />
 				<h3 id="changeapi">Change API Events</h3>
 				The Change API allows engineers to automatically log test and

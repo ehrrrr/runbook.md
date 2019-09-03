@@ -2,6 +2,7 @@ const nock = require('nock');
 const { handler } = require('../src/releaseLogHandler');
 
 const { runbook: runbookFixture, sos: sosFixture } = require('./fixtures');
+const { encodeBase64 } = require('../src/lib/type-helpers');
 const kinesisFixture = require('./fixtures/kinesis');
 
 describe('Release log handler', () => {
@@ -65,7 +66,7 @@ describe('Release log handler', () => {
 					html: `https://github.com/Financial-Times/${repositoryName}/blob/${modifiedRunbookSha}/runbook'`,
 					self: `https://api.github.com/repos/Financial-Times/${repositoryName}/contents/runbook?ref=${modifiedRunbookSha}'`,
 				},
-				content: runbookFixture,
+				content: encodeBase64(runbookFixture),
 				download_url: `https://raw.githubusercontent.com/Financial-Times/${repositoryName}/${modifiedRunbookSha}/runbook?token=AAYNBTMPMQRZEG26EKGCKYC5H4LAQ'`,
 				encoding: 'base64',
 				git_url: `https://api.github.com/repos/Financial-Times/${repositoryName}/git/blobs/97d153f4ad7ee7405400c30f0f5916ee62e4a440'`,

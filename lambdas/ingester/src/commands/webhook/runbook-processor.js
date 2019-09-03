@@ -21,10 +21,11 @@ class RunbookProcessor extends RunbookSourcer {
 		}
 		// infer runbook system code from config
 		// then from file name
-		systemCode =
+		systemCode = (
 			systemCode ||
 			this.getMappedSystemCode(path) ||
-			this.parseSystemCode(path);
+			this.parseSystemCode(path)
+		).trim();
 		if (isStringNotEmpty(systemCode)) {
 			runbook.systemCode = systemCode;
 		} else {
@@ -130,7 +131,9 @@ class RunbookProcessor extends RunbookSourcer {
 	}
 
 	parseSystemCode(path) {
-		return basename(path).replace(this.runbookRx, '');
+		return basename(path)
+			.replace(this.runbookRx, '')
+			.slice(0, -1);
 	}
 }
 

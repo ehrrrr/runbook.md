@@ -1,3 +1,6 @@
+# Copy this file to your repository root as
+# ./.github/runbooks.yml and edit as appropriate
+
 # These settings determine the behaviour of runbook.md's Runbook Validator bot
 # https://github.com/financial-times/runbook.md
 

@@ -5,6 +5,8 @@ const {
 	coerceValue,
 } = require('../../lib/type-helpers');
 
+const { GITHUB_WEBHOOK_FAIL_MODE: defaultFailureMode = 'any' } = process.env;
+
 class AppConfig {
 	constructor({
 		disabled = false,
@@ -18,7 +20,11 @@ class AppConfig {
 		const config = {
 			updateOnMerge,
 			disabled: !!disabled,
-			failOn: coerceValue(failOn, ['any', 'all', 'none'], 'any'),
+			failOn: coerceValue(
+				failOn,
+				['any', 'all', 'none'],
+				defaultFailureMode,
+			),
 		};
 
 		if (updateOnMerge) {
@@ -38,6 +44,7 @@ class AppConfig {
 
 		try {
 			if (systemCodes) {
+				config.systemCodes = config.systemCodes || {};
 				for (const [key, value] of Object.entries(systemCodes)) {
 					config.systemCodes[key] = value.toLowerCase();
 				}

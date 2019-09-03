@@ -10,7 +10,6 @@ exports.command = async context => {
 	const app = new RunbookMdApp(context, config.runbooks);
 	await app.gatherRunbooks(context);
 	await app.storeResults();
-	app.summariseResults();
 	await app.createCheck(context);
 };
 

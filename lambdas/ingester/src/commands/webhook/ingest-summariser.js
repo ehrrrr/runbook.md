@@ -23,10 +23,11 @@ class IngestSummariser extends RunbookGatherer {
 			}
 			// validate weighted score value
 			const score = numericValue(weightedScore);
+
 			if (score) {
 				scores.push(score);
 				runbook.details.weightedScore = score;
-			} else {
+			} else if (runbook.details && runbook.details.weightedScore) {
 				delete runbook.details.weightedScore;
 			}
 			// summarise everything else in a Markdown (gfm) string
