@@ -49,18 +49,11 @@ const createGithubAPIClient = (log = logger) => async (
 	});
 
 	if (!response.ok) {
-		const contentType = response.headers.get('content-type');
-		const body = await (contentType &&
-		contentType.includes('application/json')
-			? response.json()
-			: response.text());
-
 		requestOptions.headers.Authorization = `token: <redacted>`;
 		log.error({
 			event: 'GITHUB_API_FAILURE',
 			url,
 			requestOptions,
-			body,
 			statusCode: response.status,
 		});
 		throw new Error(
@@ -75,6 +68,28 @@ class RunbookSource {
 	constructor({ logger: log = logger, githubAPI } = {}) {
 		this.logger = log;
 		this.githubAPI = githubAPI;
+	}
+
+	async postRunbookIssue(
+		gitRepositoryName,
+		githubName,
+		errorCause,
+		systemCode,
+	) {
+		const path = `/repos/${gitRepositoryName}/issues`;
+		const requestOptions = {
+			method: 'POST',
+			body: JSON.stringify({
+				title: 'runbook.md automated runbook ingestion failure',
+				body: `@${githubName}, there was an error synchronising runbook data with Biz-Ops: ${errorCause}.
+				This automated operation was triggered by a recent release.
+				logged in [Change API](https://financialtimes.splunkcloud.com/en-GB/app/search/search?q=search%20index%3D%22aws_cloudwatch%22%20source%3D%22%2Faws%2Flambda%2Fchange-request*).
+				You can find further details about what went wrong on [Splunk](https://financialtimes.splunkcloud.com/en-US/app/search/search?q=search%20index%3Daws_cloudwatch%20source%3D${systemCode})
+				Issue posted automatically by [runbook.md](https://runbooks.in.ft.com/)`,
+			}),
+		};
+		const postIssue = await this.githubAPI(path, requestOptions);
+		return postIssue;
 	}
 
 	getRunbookUrlFromModifiedFiles(files) {
@@ -195,6 +210,7 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 			});
 
 			let repository = 'UNKNOWN';
+
 			try {
 				if (!gitRefUrl) {
 					throw new Error(
@@ -249,6 +265,7 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				return {
 					systemCode,
 					content: runbookContent,
+					repository: gitRepositoryName,
 					eventID,
 				};
 			} catch (error) {
@@ -266,6 +283,7 @@ const fetchRunbookMds = (parsedRecords, childLogger) =>
 				throw Object.assign(new Error(errorMessage), {
 					cause: error,
 					record,
+					repository,
 				});
 			}
 		}),
@@ -275,8 +293,15 @@ const getRecordIDs = records => records.map(({ eventID }) => eventID);
 
 const processRunbookMd = async (parsedRecords, childLogger) => {
 	const eventIDs = getRecordIDs(parsedRecords);
+	const runbookSource = new RunbookSource({
+		githubAPI: createGithubAPIClient(),
+	});
 	try {
+		// first point of failure: if this errors, we go into the catch block
+		// this can only error once – Promise.all bails as soon as one its promises rejects
+
 		const runbookMDs = await fetchRunbookMds(parsedRecords, childLogger);
+		// second point of failure: same as above
 
 		const ingestedRunbooks = await ingestRunbookMDs(
 			runbookMDs,
@@ -284,13 +309,6 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 		);
 
 		const errors = ingestedRunbooks.filter(result => result.status >= 400);
-		errors.forEach(result => {
-			childLogger.error({
-				...result,
-				event: 'RUNBOOK_INGEST_FAILED',
-			});
-		});
-
 		if (errors.length) {
 			childLogger.info({
 				event: 'RELEASE_PROCESSING_SUCCESS',
@@ -307,6 +325,27 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 			eventIDs,
 			error,
 		});
+
+		// handle any of the 2 points of failure above
+		// by creating an issue on the github repo
+		if (error.repository) {
+			const {
+				repository,
+				record: {
+					systemCode,
+					user: { githubName },
+				},
+				message,
+			} = error;
+
+			// the order matters here too
+			await runbookSource.postRunbookIssue(
+				repository,
+				githubName,
+				message,
+				systemCode,
+			);
+		}
 
 		return json(400, {
 			message: 'Something went wrong during ingesting runbook.md files.',

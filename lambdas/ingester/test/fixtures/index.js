@@ -8,4 +8,6 @@ exports.runbook = readFileSync(join(__dirname, './runbook-fixture.md'));
 
 exports.sos = require('./sos.json');
 
+exports.badRunbook = readFileSync(join(__dirname, './runbook-fixture.md'));
+
 exports.webhook = { checkSuiteRequested, checkRunRerequested };
