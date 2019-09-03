@@ -113,7 +113,7 @@ functions:
     events:
       - stream:
           type: kinesis
-          batchSize: 100
+          batchSize: 1
           arn: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-${env:ENVIRONMENT}-enriched-stream
           startingPosition: TRIM_HORIZON
           enabled: true
