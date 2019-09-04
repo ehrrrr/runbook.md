@@ -88,8 +88,10 @@ ${data.description || '<!-- Enter a description  -->'}`;
 			return `<!--
 ${
 	hasMany
-		? `Enter a markdown list of valid ${type} codes`
-		: `Enter a valid ${type} code`
+		? `Enter a markdown list of valid ${type} codes, or delete
+this comment and the heading above if not applicable to this system.`
+		: `Enter a valid ${type} code, or delete this comment and the
+heading above if not applicable to this system.`
 }
 -->`;
 		}
