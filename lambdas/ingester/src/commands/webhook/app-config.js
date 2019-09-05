@@ -10,7 +10,7 @@ const { GITHUB_WEBHOOK_FAIL_MODE: defaultFailureMode = 'any' } = process.env;
 class AppConfig {
 	constructor({
 		disabled = false,
-		failOn = 'any',
+		failOn,
 		updateOnMerge = false,
 		updateBranch = 'master',
 		systemCodes = [],
