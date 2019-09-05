@@ -76,20 +76,38 @@ class RunbookSource {
 		errorCause,
 		systemCode,
 	) {
-		const path = `/repos/${gitRepositoryName}/issues`;
-		const requestOptions = {
-			method: 'POST',
-			body: JSON.stringify({
-				title: 'runbook.md automated runbook ingestion failure',
-				body: `@${githubName}, there was an error synchronising runbook data with Biz-Ops: ${errorCause}.
+		try {
+			const path = `/repos/${gitRepositoryName}/issues`;
+			const requestOptions = {
+				method: 'POST',
+				body: JSON.stringify({
+					title: 'runbook.md automated runbook ingestion failure',
+					body: `@${githubName}, there was an error synchronising runbook data with Biz-Ops: ${errorCause}.
 				This automated operation was triggered by a recent release.
-				logged in [Change API](https://financialtimes.splunkcloud.com/en-GB/app/search/search?q=search%20index%3D%22aws_cloudwatch%22%20source%3D%22%2Faws%2Flambda%2Fchange-request*).
+				Logged in [Change API](https://financialtimes.splunkcloud.com/en-GB/app/search/search?q=search%20index%3D%22aws_cloudwatch%22%20source%3D%22%2Faws%2Flambda%2Fchange-request*).
 				You can find further details about what went wrong on [Splunk](https://financialtimes.splunkcloud.com/en-US/app/search/search?q=search%20index%3Daws_cloudwatch%20source%3D${systemCode})
+				Need help? [Slack us](https://financialtimes.slack.com/messages/CFR0GPCAH)
 				Issue posted automatically by [runbook.md](https://runbooks.in.ft.com/)`,
-			}),
-		};
-		const postIssue = await this.githubAPI(path, requestOptions);
-		return postIssue;
+				}),
+			};
+			const postIssue = await this.githubAPI(path, requestOptions);
+
+			if (!postIssue.ok) {
+				const err = new Error(
+					`github responded with ${postIssue.status}`,
+				);
+				err.response = postIssue;
+				throw err;
+			}
+
+			return postIssue;
+		} catch (error) {
+			logger.info({
+				event: 'GITHUB_POST_FAILED',
+				error,
+				gitRepositoryName,
+			});
+		}
 	}
 
 	getRunbookUrlFromModifiedFiles(files) {
@@ -338,7 +356,6 @@ const processRunbookMd = async (parsedRecords, childLogger) => {
 				message,
 			} = error;
 
-			// the order matters here too
 			await runbookSource.postRunbookIssue(
 				repository,
 				githubName,
