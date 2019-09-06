@@ -108,7 +108,7 @@ class IngestSummariser extends RunbookGatherer {
 
 		return [
 			`## ${path}  \n`,
-			`${emoji} **${status}** | [Go to file](${url}) | [**Help me improve this »**](${statusUrl})`,
+			`${emoji} **${status}** | [Go to file](${url}) | [**View report »**](${statusUrl})`,
 			// ingest message
 			message && `> ${message}  \n`,
 			// weighted score

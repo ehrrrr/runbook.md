@@ -7,11 +7,11 @@ const { isStringNotEmpty, decodeBase64 } = require('../../lib/type-helpers');
 const bizOpsApiKey = process.env.BIZ_OPS_API_KEY;
 
 class RunbookProcessor extends RunbookSourcer {
-	async processRunbook(context, { sha, path, url, content, systemCode }) {
+	async processRunbook(context, { sha, path, content, systemCode }) {
 		const runbook = {
 			sha,
 			path,
-			url: url || this.buildGitHubUrl(path),
+			url: this.buildGitHubUrl(path),
 			content: content || (await this.getRunbookContents(context, sha)),
 		};
 		// bail early if the file is zero-length
