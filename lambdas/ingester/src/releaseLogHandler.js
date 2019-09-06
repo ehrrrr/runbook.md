@@ -158,256 +158,246 @@ class RunbookSource {
 	}
 }
 
-const ingestRunbookMDs = (runbookMDs, childLogger) =>
-	Promise.all(
-		runbookMDs
-			.filter(({ content, eventID }) => {
-				if (content) {
-					return true;
-				}
-				childLogger.info({
-					event: 'NO_RUNBOOK_CONTENT_FOUND',
-					eventID,
-				});
-				return false;
-			})
-			.map(async ({ systemCode, content, eventID }) => {
-				const fetchRunbookLogger = childLogger.child({ eventID });
-
-				try {
-					fetchRunbookLogger.info({
-						event: 'INGEST_RUNBOOK_MD_START',
-					});
-
-					const result = await ingest({
-						systemCode,
-						content,
-						shouldWriteToBizOps: true,
-						bizOpsApiKey,
-					});
-
-					fetchRunbookLogger.info({
-						event: 'INGEST_RUNBOOK_MD_COMPLETE',
-						ingestStatus: result.status,
-						ingestMessage: result.message,
-					});
-					return { ...result, eventID };
-				} catch (error) {
-					fetchRunbookLogger.error(
-						{
-							event: 'INGEST_RUNBOOK_MD_FAILED',
-							error,
-							systemCode,
-						},
-						`Ingesting runbook has failed for ${systemCode}.`,
-					);
-					throw error;
-				}
-			}),
-	);
-
-const fetchRunbookMds = (parsedRecords, childLogger) =>
-	Promise.all(
-		parsedRecords.map(async record => {
-			const {
-				commit,
-				systemCode,
-				githubData: { htmlUrl: gitRefUrl },
-				eventID,
-			} = record;
-
-			const fetchRunbookLogger = childLogger.child({ eventID });
-
-			fetchRunbookLogger.info({
-				event: 'GET_RUNBOOK_CONTENT_START',
-			});
-
-			const runbookSource = new RunbookSource({
-				logger: fetchRunbookLogger,
-				githubAPI: createGithubAPIClient(fetchRunbookLogger),
-			});
-
-			let repository = 'UNKNOWN';
-
-			try {
-				if (!gitRefUrl) {
-					throw new Error(
-						'No github data associated with the ChangeAPI event',
-					);
-				}
-
-				const [gitRepositoryName] =
-					gitRefUrl
-						.replace('https://github.com/', '')
-						.match(/[a-z0-9_.-]+\/[a-z0-9_.-]+/i) || [];
-
-				if (!gitRepositoryName) {
-					throw new Error(
-						`Github data (htmlUrl) associated with the event is invalid: ${gitRefUrl}`,
-					);
-				}
-
-				repository = gitRepositoryName;
-
-				// the gitRefUrl can tell us whether we have a PR on our hands...
-				// https://github.com/Financial-Times/next-api/pull/474
-				const [, prNumber] = gitRefUrl.match(/\/pull\/(\d+)$/) || [];
-
-				let runbookContent;
-
-				if (!prNumber) {
-					runbookContent = await runbookSource.getRunbookFromCommit(
-						commit,
-						gitRepositoryName,
-					);
-				}
-
-				if (!runbookContent) {
-					runbookContent = await runbookSource.getRunbookFromPR(
-						commit,
-						gitRepositoryName,
-						prNumber,
-					);
-				}
-
-				if (runbookContent) {
-					fetchRunbookLogger.info({
-						event: 'GET_RUNBOOK_CONTENT_SUCCESS',
-					});
-				} else {
-					fetchRunbookLogger.info({
-						event: 'GET_RUNBOOK_CONTENT_SUCCESS_NO_CONTENT',
-					});
-				}
-
-				return {
-					systemCode,
-					content: runbookContent,
-					repository: gitRepositoryName,
-					eventID,
-				};
-			} catch (error) {
-				const errorMessage =
-					'Retrieving runbook.md from Github API has failed';
-				fetchRunbookLogger.error(
-					{
-						event: 'GET_RUNBOOK_CONTENT_FAILED',
-						error,
-						record,
-						repository,
-					},
-					errorMessage,
-				);
-				throw Object.assign(new Error(errorMessage), {
-					cause: error,
-					record,
-					repository,
-				});
-			}
-		}),
-	);
-
-const getRecordIDs = records => records.map(({ eventID }) => eventID);
-
-const processRunbookMd = async (parsedRecords, childLogger) => {
-	const eventIDs = getRecordIDs(parsedRecords);
-	const runbookSource = new RunbookSource({
-		githubAPI: createGithubAPIClient(),
+const fetchRunbook = async (
+	{
+		commit,
+		systemCode,
+		githubData: { htmlUrl: gitRefUrl },
+		user: { githubName },
+		eventID,
+	},
+	loggerInstance,
+) => {
+	const childLogger = loggerInstance.child({
+		commit,
+		systemCode,
+		githubName,
+		gitRefUrl,
+		eventID,
 	});
+
+	childLogger.info({
+		event: 'GET_RUNBOOK_CONTENT',
+	});
+
+	const runbookSource = new RunbookSource({
+		logger: childLogger,
+		githubAPI: createGithubAPIClient(childLogger),
+	});
+
+	let repository;
+
 	try {
-		// first point of failure: if this errors, we go into the catch block
-		// this can only error once – Promise.all bails as soon as one its promises rejects
-
-		const runbookMDs = await fetchRunbookMds(parsedRecords, childLogger);
-		// second point of failure: same as above
-
-		const ingestedRunbooks = await ingestRunbookMDs(
-			runbookMDs,
-			childLogger,
-		);
-
-		const errors = ingestedRunbooks.filter(result => result.status >= 400);
-		if (errors.length) {
-			childLogger.info({
-				event: 'RELEASE_PROCESSING_SUCCESS',
-				eventIDs,
-			});
+		if (!gitRefUrl) {
+			throw new Error('Invalid github reference URL');
 		}
 
-		return json(200, {
-			message: 'Ingesting changed runbook.md files was successful.',
-		});
-	} catch (error) {
+		const [repoName] =
+			gitRefUrl
+				.replace('https://github.com/', '')
+				.match(/[a-z0-9_.-]+\/[a-z0-9_.-]+/i) || [];
+
+		if (!repoName) {
+			throw new Error(
+				'Could not parse repository name from github reference URL',
+			);
+		}
+
+		repository = repoName;
+
+		// the gitRefUrl can tell us whether we have a PR on our hands...
+		// https://github.com/Financial-Times/next-api/pull/474
+		const [, prNumber] = gitRefUrl.match(/\/pull\/(\d+)$/) || [];
+
+		let content;
+
+		if (!prNumber) {
+			childLogger.info({
+				event: 'GETTING_RUNBOOK_FROM_COMMIT',
+			});
+			content = await runbookSource.getRunbookFromCommit(
+				commit,
+				repository,
+			);
+		} else {
+			childLogger.info({
+				event: 'GETTING_RUNBOOK_FROM_PR',
+				prNumber,
+			});
+			content = await runbookSource.getRunbookFromPR(
+				commit,
+				repository,
+				prNumber,
+			);
+		}
+
+		if (!content) {
+			throw new Error('Could not retrieve runbook content');
+		}
+
 		childLogger.info({
-			event: 'RELEASE_PROCESSING_FAILURE',
-			eventIDs,
+			event: 'GOT_RUNBOOK_CONTENT',
+		});
+
+		return {
+			systemCode,
+			content,
+			repository,
+			githubName,
+			runbookSource,
+			childLogger,
+		};
+	} catch (error) {
+		childLogger.error({
+			event: 'GETTING_RUNBOOK_FAILED',
 			error,
 		});
 
-		// handle any of the 2 points of failure above
-		// by creating an issue on the github repo
-		if (error.repository) {
-			const {
-				repository,
-				record: {
-					systemCode,
-					user: { githubName },
-				},
-				message,
-			} = error;
-
+		if (repository && githubName) {
 			await runbookSource.postRunbookIssue(
 				repository,
 				githubName,
-				message,
+				error.message,
 				systemCode,
 			);
 		}
 
+		return null;
+	}
+};
+
+const fetchRunbooks = async (parsedRecords, childLogger) => {
+	const runbooksFetched = await Promise.all(
+		parsedRecords.map(record => fetchRunbook(record, childLogger)),
+	);
+
+	return runbooksFetched.filter(record => !!record);
+};
+
+const ingestRunbook = async ({
+	systemCode,
+	content,
+	repository,
+	githubName,
+	childLogger,
+	runbookSource,
+}) => {
+	try {
+		const result = await ingest({
+			systemCode,
+			content,
+			shouldWriteToBizOps: true,
+			bizOpsApiKey,
+		});
+
+		const { status, message } = result;
+
+		childLogger.info({
+			event: 'RUNBOOK_INGEST_SUCCESSFUL',
+			status,
+			message,
+		});
+
+		return { ...result };
+	} catch (error) {
+		childLogger.error({
+			event: 'RUNBOOK_INGEST_FAILED',
+			error,
+		});
+
+		if (repository && githubName) {
+			await runbookSource.postRunbookIssue(
+				repository,
+				githubName,
+				error.message,
+				systemCode,
+			);
+		}
+
+		return null;
+	}
+};
+
+const ingestRunbooks = async runbookInstances => {
+	const runbooksIngested = await Promise.all(
+		runbookInstances.map(runbook => ingestRunbook(runbook)),
+	);
+
+	return runbooksIngested.filter(runbook => !!runbook);
+};
+
+const getRecordIDs = records => records.map(({ eventID }) => eventID);
+
+const processRunbookMd = async parsedRecords => {
+	const eventIDs = getRecordIDs(parsedRecords);
+	const childLogger = logger.child({ eventIDs });
+
+	try {
+		// this does not reject or throw, instead it will return an empty array
+		// if no fetches were successful
+		// all errors are handled within, including posting of github issues
+		const runbookInstances = await fetchRunbooks(
+			parsedRecords,
+			childLogger,
+		);
+
+		if (!runbookInstances.length) {
+			throw new Error('Bailing, could not fetch any runbooks.');
+		}
+
+		// this also does not reject or throw, instead it will return an empty array
+		// if no ingests were successful
+		// all errors are handled within, including posting of github issues
+		const ingestedRunbooks = await ingestRunbooks(runbookInstances);
+
+		if (!ingestedRunbooks.length) {
+			throw new Error('Bailing, could not ingest any runbooks.');
+		}
+
+		return json(200, {
+			message: 'Ingesting changed runbook.md files was successful.',
+			eventIDs,
+		});
+	} catch (error) {
+		childLogger.error({
+			event: 'RELEASE_PROCESSING_UNEXPECTED_FAILURE',
+			eventIDs,
+			error,
+		});
+
 		return json(400, {
 			message: 'Something went wrong during ingesting runbook.md files.',
+			eventIDs,
 		});
 	}
 };
 
-const handler = async (event, context) => {
-	const childLogger = logger.child({ awsRequestId: context.awsRequestId });
+const handler = ({ Records }, { awsRequestId }) => {
+	const eventIDs = getRecordIDs(Records);
+	const childLogger = logger.child({ awsRequestId, eventIDs });
+
 	childLogger.info({
 		event: 'RELEASE_TRIGGERED',
-		eventIDs: getRecordIDs(event.Records),
 	});
 
-	const parsedRecords = event.Records.map(
+	const parsedRecords = Records.map(
 		parseKinesisRecord(childLogger, 'RECEIVED_CHANGE_API_EVENT'),
 	).filter(filterValidKinesisRecord(childLogger));
 
-	if (parsedRecords.length === 0) {
+	if (!parsedRecords.length) {
 		childLogger.info(
 			{
-				event: 'SKIPPING_INGEST',
+				event: 'SKIPPING_RECORD_SET',
 			},
-			'Nothing to ingest, skipping event',
+			'Nothing to ingest, skipping record set',
 		);
 		return json(200, {
-			message: 'Nothing to ingest, skipping',
+			message: 'Nothing to ingest',
+			eventIDs,
 		});
 	}
 
-	parsedRecords.forEach(({ commit, systemCode, eventID }) => {
-		childLogger.info(
-			{
-				event: 'BEGIN_PROCESSING_RELEASE_RECORD',
-				record: {
-					commit,
-					systemCode,
-					eventID,
-				},
-			},
-			'Began processing record',
-		);
-	});
-
-	return processRunbookMd(parsedRecords, childLogger);
+	return processRunbookMd(parsedRecords);
 };
 
 module.exports = {

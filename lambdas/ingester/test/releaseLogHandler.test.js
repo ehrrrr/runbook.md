@@ -249,9 +249,9 @@ describe('Release log handler', () => {
 		});
 		expect(result).toEqual({
 			statusCode: 200,
-			body: JSON.stringify({
-				message: 'Ingesting changed runbook.md files was successful.',
-			}),
+			body: expect.stringContaining(
+				'Ingesting changed runbook.md files was successful.',
+			),
 			headers: {
 				'Content-Type': 'application/json',
 			},
@@ -323,12 +323,11 @@ describe('Release log handler', () => {
 			awsRequestID: givenAwsRequestId,
 		});
 
-		expect(result).toEqual({
+		expect(result).toMatchObject({
 			statusCode: 400,
-			body: JSON.stringify({
-				message:
-					'Something went wrong during ingesting runbook.md files.',
-			}),
+			body: expect.stringContaining(
+				'Something went wrong during ingesting runbook.md files.',
+			),
 			headers: {
 				'Content-Type': 'application/json',
 			},
