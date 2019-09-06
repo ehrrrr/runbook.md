@@ -56,7 +56,11 @@ class IngestSummariser extends RunbookGatherer {
 			failed,
 			conclusion,
 			text,
-			title: `Validation ${status.toLowerCase()}`,
+			title: passCount
+				? `${
+						total > 1 ? `${passCount}/${total}` : makePlural(total)
+				  } passed`
+				: `${makePlural(total)} failed`,
 		};
 
 		if (total > 1) {
@@ -69,9 +73,6 @@ class IngestSummariser extends RunbookGatherer {
 						'score',
 					)}).`,
 			);
-			this.results.title = passCount
-				? `${passCount}/${total} passed`
-				: `${makePlural(total)} failed`;
 		}
 
 		if (avgScore) {
