@@ -128,7 +128,7 @@ class IngestSummariser extends RunbookGatherer {
 	}
 
 	buildGitHubUrl(path) {
-		return `https://github.com/${this.repository}/${this.treeId}/${path}`;
+		return `https://github.com/${this.repository}/blob/${this.sha}/${path}`;
 	}
 
 	statusUrl(runbookSha) {
