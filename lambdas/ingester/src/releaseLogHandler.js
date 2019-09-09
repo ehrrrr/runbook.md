@@ -209,7 +209,7 @@ const fetchRunbook = async (
 		}
 
 		if (!content) {
-			throw new Error('Could not retrieve runbook content');
+			throw new Error('Bailing: No runbook found in commit tree');
 		}
 
 		childLogger.info({
@@ -229,15 +229,6 @@ const fetchRunbook = async (
 			event: 'GETTING_RUNBOOK_FAILED',
 			error,
 		});
-
-		if (repository && githubName) {
-			await runbookSource.postRunbookIssue(
-				repository,
-				githubName,
-				error.message,
-				systemCode,
-			);
-		}
 
 		return null;
 	}
