@@ -55,13 +55,8 @@ ${data.description || '<!-- Enter a description  -->'}`;
 	const fields = []
 		.concat(
 			...Object.values(systemSchema.fieldsets).map(({ properties }) =>
-				Object.entries(properties).map(
-					([name, { isRelationship, hasMany, type }]) => ({
-						name,
-						isRelationship,
-						hasMany,
-						type,
-					}),
+				Object.entries(properties).map(([name, def]) =>
+					Object.assign({ name }, def),
 				),
 			),
 		)
@@ -71,7 +66,13 @@ ${data.description || '<!-- Enter a description  -->'}`;
 				!deprecationReason && !excludedProperties.includes(name),
 		);
 
-	const outputValue = ({ name, isRelationship, hasMany, type }) => {
+	const outputValue = ({
+		name,
+		isRelationship,
+		hasMany,
+		type,
+		description,
+	}) => {
 		if (name in data) {
 			if (type === 'Boolean') {
 				return data[name] ? 'Yes' : 'No';
@@ -108,7 +109,9 @@ Choose Yes or No
 -->`;
 		}
 		return `<!--
-Enter descriptive text, or delete this comment and the heading above
+Enter descriptive text satisfying the following:
+${description}
+...or delete this comment and the heading above if not applicable
 -->`;
 	};
 

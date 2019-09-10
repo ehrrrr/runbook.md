@@ -37,10 +37,13 @@ module.exports = function(form) {
 	const choiceForm = form.querySelector('#import-or-manual');
 
 	if (choiceForm) {
-		const cleanup = () => {
+		const cleanup = (remove = true) => {
 			form.querySelector('#runbookContent').removeAttribute('hidden');
-			choiceForm.parentNode.removeChild(choiceForm);
+			if (remove) {
+				choiceForm.parentNode.removeChild(choiceForm);
+			}
 		};
+
 		const enterManuallyButton = choiceForm.querySelector('#enter-manually');
 		enterManuallyButton.addEventListener('click', ev => {
 			ev.preventDefault();
@@ -50,28 +53,62 @@ module.exports = function(form) {
 
 		const importButton = choiceForm.querySelector('#import-from-biz-ops');
 
-		importButton.addEventListener('click', async ev => {
-			ev.preventDefault();
-			ev.stopPropagation();
+		const populate = async () => {
 			const systemCode = form.querySelector('#import-system-code').value;
 			if (!systemCode) {
 				window.alert('Please enter a system code');
 				return;
 			}
-
+			let removeForm = false;
 			const runbook = await fetch(
 				`/runbook.md/export?systemCode=${systemCode}`,
-			).then(res => res.text());
+			).then(res => {
+				if (res.ok) {
+					removeForm = true;
+				}
+				return res.text();
+			});
 
 			runbookContent.textContent = runbook;
 
-			cleanup();
+			cleanup(removeForm);
+		};
+
+		choiceForm.addEventListener('keyup', ev => {
+			if (ev.keyCode === 13) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				populate();
+				return false;
+			}
+		});
+		importButton.addEventListener('click', ev => {
+			ev.preventDefault();
+			ev.stopPropagation();
+			populate();
 		});
 	}
 
+	const avoidPrematureSubmission = ev => {
+		if (form.querySelector('#import-or-manual')) {
+			ev.stopImmediatePropagation();
+			ev.preventDefault();
+			return true;
+		}
+	};
+
+	form.addEventListener('submit', ev => {
+		if (avoidPrematureSubmission(ev)) {
+			return false;
+		}
+	});
 	// import-from-biz-ops
-	submitButton.addEventListener('click', event => {
-		submitForm(event, form);
+	submitButton.addEventListener('click', ev => {
+		console.log('asdlsakj dsajkhd sajkdh jh jh ');
+		if (avoidPrematureSubmission(ev)) {
+			return false;
+		}
+		submitForm(ev, form);
 	});
 
 	runbookContent.addEventListener('focus', ({ target }) =>
