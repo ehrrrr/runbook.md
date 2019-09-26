@@ -68,15 +68,18 @@ const ValidateForm = ({
 			</aside>
 			<h2>What next?</h2>
 			<p>
-				Once you&apos;re happy with what you&apos;ve written here, save
-				it as `RUNBOOK.md` in your project repository. You will also
-				need to hook your project up to{' '}
+				Once you are happy with what you&apos;ve written here, save it
+				as <strong>RUNBOOK.md</strong> in your project repository (or{' '}
+				<strong>system-code_runbook.md</strong> if your repository
+				contains multiple runbooks, where <strong>system-code</strong>{' '}
+				matches an existing Biz Ops systemCode). You will also need to
+				hook up your project to{' '}
 				<a href="https://github.com/Financial-Times/change-api#integration-examples">
 					Change API
 				</a>
 				. Any production releases which also include changes to the
-				`RUNBOOK.md` content will then automatically result in Biz Ops
-				and <a href="https://runbooks.in.ft.com">runbooks.in.ft.com</a>{' '}
+				runbook content will then automatically result in Biz Ops and{' '}
+				<a href="https://runbooks.in.ft.com">runbooks.in.ft.com</a>{' '}
 				being updated with the new information.
 			</p>
 		</form>

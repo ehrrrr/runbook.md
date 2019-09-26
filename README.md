@@ -17,16 +17,16 @@ Here is the workflow: ![workflow](./docs/changeApi_runbooks.md_workflow.png)
 
 ### GitHub app (beta)
 
-The [runbook.md github app](https://github.com/organizations/Financial-Times/settings/installations/1210233) validates a repository's RUNBOOK.MD files against our organisation-wide standard, and offers suggestions for improvement.
+The [runbook.md github app](https://github.com/organizations/Financial-Times/settings/installations/1210233) validates a repository's RUNBOOK.MD files - Markdown files following the `/runbook.md$/i` naming convention - against our organisation-wide standard, and offers suggestions for improvement.
 
 For manual release processes or multi-system repositories, where integrating with
 [Change API](https://github.com/Financial-Times/change-api#change-api---v2) is not possible, the GitHub app supports [custom configuration (example here)](./docs/example-runbooks.yml) for updating system information in Biz-Ops.
 
-**This application is beta. If you would like to test-drive it, add your repo to the repository access list [here](https://github.com/organizations/Financial-Times/settings/installations/1210233). We expect that we will install it globally by mid-September 2019.**
+For repositories containing source code for more than one system, please adhere to a `system-code_runbook.md` naming convention (where `system-code` is the `systemCode` as written in Biz-Ops) or use [custom config](./docs/example-runbooks.yml) to map each runbook to a system.
 
 ![image](https://user-images.githubusercontent.com/12828487/62377885-8d4f6780-b53b-11e9-946b-49292d32f12d.png)
 
-### Manual update
+### Manual validation
 
 This utility allows manual upload of a RUNBOOK.md file for validation and [operability scoring](https://github.com/Financial-Times/system-operability-score). Optionally, the tool can be used to populate associated critical fields in Biz Ops based on the content of a _valid runbook_.
 
