@@ -51,7 +51,7 @@ const validate = payload =>
 	}).then(({ status, json }) => {
 		// Remove any errors which are not directly attributable to the System properties
 		Object.entries(json.errorProperties).forEach(([name, properties]) => {
-			if (![properties].some(({ key }) => /^System\//.test(key))) {
+			if (!properties.some(({ key }) => /^System\//.test(key))) {
 				delete json.errorMessages[name];
 			}
 		});

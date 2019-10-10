@@ -68,7 +68,7 @@ exports.ParseErrors = ({ errors }) => {
 
 exports.ValidationErrors = ({ errors }) => {
 	const tableProps = {
-		caption: 'Validation Errors',
+		caption: 'What to improve',
 		columns: ['Facet', 'Errors'],
 		rows: Object.entries(errors).map(([facet, messages]) => [
 			facet,
