@@ -1,12 +1,14 @@
 const stripHtmlComments = require('strip-html-comments');
 const runbookMd = require('../lib/parser');
 const { validate, updateBizOps } = require('../lib/external-apis');
+const { updateSystemRepository } = require('../lib/biz-ops-client');
 const { transformCodesIntoNestedData } = require('../lib/code-validation');
 
 const transformIngestedDetails = (
 	parseResult,
 	validationResult,
 	writeResult,
+	updateSystemRepositoryResult,
 ) => ({
 	...(parseResult && {
 		parseErrors: parseResult.errors,
@@ -18,6 +20,9 @@ const transformIngestedDetails = (
 		weightedScore: Number(validationResult.weightedScore).toFixed(1),
 	}),
 	...(writeResult && { updatedFields: writeResult }),
+	...(updateSystemRepositoryResult && {
+		updadatedRepository: updateSystemRepositoryResult,
+	}),
 });
 
 const decorateError = props => {
@@ -32,6 +37,7 @@ const ingest = async payload => {
 		shouldWriteToBizOps,
 		systemCode,
 		bizOpsApiKey,
+		repository,
 	} = payload;
 	if (!rawRunbook) {
 		throw decorateError({
@@ -93,13 +99,27 @@ const ingest = async payload => {
 		systemCode,
 		parseResult.data,
 	);
-
 	if (status !== 200) {
 		throw decorateError({
 			status,
 			message: `Parse & validation complete. Biz-Ops update failed (status ${status}).`,
 			code: 'parse-ok-update-error',
 			response,
+			details,
+		});
+	}
+
+	let updateSystemRepositoryResult;
+	try {
+		updateSystemRepositoryResult = await updateSystemRepository(
+			systemCode,
+			repository,
+		);
+	} catch (error) {
+		throw decorateError({
+			message: `Parse & validation complete. Biz-Ops update repository failed`,
+			code: 'parse-ok-update-repository-error',
+			updateSystemRepositoryResult,
 			details,
 		});
 	}
@@ -112,6 +132,7 @@ const ingest = async payload => {
 			parseResult,
 			validationResult,
 			response,
+			updateSystemRepositoryResult,
 		),
 	};
 };

@@ -174,6 +174,19 @@ describe('Release log handler', () => {
 					query.lockFields.split(',').length > 0,
 			)
 			.reply(200, {});
+
+	const addBizOpsAPIRelationshipInterceptor = ({ systemCode }) =>
+		nock(getBizOpsApiBaseUrl())
+			.defaultReplyHeaders({
+				'Content-Type': 'application/json',
+			})
+			.replyContentLength()
+			.patch(`/biz-ops/v2/node/System/${systemCode}`)
+			.query({
+				relationshipAction: 'merge',
+			})
+			.reply(200, {});
+
 	it(`should handle a single record correctly when the record contains
 		a change to a runbook made via a Github pull-request`, async () => {
 		const givenSystemCode = 'biz-ops-runbook-md';
@@ -242,6 +255,9 @@ describe('Release log handler', () => {
 		addBizOpsGraphQlInterceptor();
 		addSosValidationInterceptor();
 		addBizOpsAPIPatchInterceptor({
+			systemCode: givenSystemCode,
+		});
+		addBizOpsAPIRelationshipInterceptor({
 			systemCode: givenSystemCode,
 		});
 		const result = await handler(givenEvent, {

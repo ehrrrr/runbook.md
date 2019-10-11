@@ -77,7 +77,12 @@ class RunbookProcessor extends RunbookSourcer {
 			},
 		});
 
-		const payload = { bizOpsApiKey, shouldWriteToBizOps, ...runbook };
+		const payload = {
+			bizOpsApiKey,
+			shouldWriteToBizOps,
+			repository: this.repository,
+			...runbook,
+		};
 		const result = {
 			state: 'success',
 			...runbook,

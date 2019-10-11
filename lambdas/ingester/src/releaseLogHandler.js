@@ -256,6 +256,7 @@ const ingestRunbook = async ({
 			content,
 			shouldWriteToBizOps: true,
 			bizOpsApiKey,
+			repository,
 		});
 
 		const { status, message } = result;

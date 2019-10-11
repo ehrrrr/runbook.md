@@ -1,9 +1,11 @@
 jest.mock('../src/lib/external-apis');
 jest.mock('../src/lib/code-validation');
+jest.mock('../src/lib/biz-ops-client');
 
 const runbookMd = require('../src/lib/parser');
 const externalApis = require('../src/lib/external-apis');
 const bizOpsValidation = require('../src/lib/code-validation');
+const bizOpsClient = require('../src/lib/biz-ops-client');
 
 const { ingest } = require('../src/commands/ingest');
 
@@ -12,6 +14,7 @@ const payload = {
 	shouldWriteToBizOps: false,
 	bizOpsApiKey: 'dummyKey',
 	content: '# this is a name\ndescription\n## service tier\nbronze',
+	repository: 'Financial-Times/runbook.md',
 };
 
 describe('ingest command', () => {
@@ -40,6 +43,9 @@ describe('ingest command', () => {
 		spies.transformCodesIntoNestedData = jest
 			.spyOn(bizOpsValidation, 'transformCodesIntoNestedData')
 			.mockResolvedValue({ expandedData: {}, errors: [] });
+		spies.updateSystemRepository = jest
+			.spyOn(bizOpsClient, 'updateSystemRepository')
+			.mockResolvedValue({ status: 200 });
 	});
 
 	afterEach(() => {
@@ -54,6 +60,7 @@ describe('ingest command', () => {
 			expect(spies.transformCodesIntoNestedData).toHaveBeenCalled();
 			expect(spies.validate).toHaveBeenCalled();
 			expect(spies.updateBizOps).toHaveBeenCalled();
+			expect(spies.updateSystemRepository).toHaveBeenCalled();
 			expect(result).toMatchObject({
 				code: expect.stringMatching('parse-ok-update-ok'),
 				details: {
@@ -124,6 +131,24 @@ describe('ingest command', () => {
 			expect(result).toMatchObject({
 				rejected: true,
 				code: expect.stringMatching('parse-ok-apiKey-missing'),
+				details: {
+					parseData,
+				},
+			});
+		});
+	});
+
+	describe('when biz-ops api merge relationshipAction is failed', () => {
+		test('and writing to biz-ops is enabled, fail', async () => {
+			spies.updateSystemRepository = jest
+				.spyOn(bizOpsClient, 'updateSystemRepository')
+				.mockRejectedValue({});
+			const { result, parseData } = await runIngest({
+				shouldWriteToBizOps: true,
+			});
+			expect(result).toMatchObject({
+				rejected: true,
+				code: expect.stringMatching('parse-ok-update-repository-error'),
 				details: {
 					parseData,
 				},

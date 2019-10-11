@@ -53,6 +53,35 @@ const readSystem = async code => {
 	return response.json();
 };
 
+const updateSystemRepository = async (systemCode, gitRepositoryName) => {
+	const options = {
+		method: 'PATCH',
+		headers: {
+			'x-api-key': BIZ_OPS_API_KEY,
+			'client-id': 'biz-ops-runbook-md',
+			'content-type': 'application/json',
+		},
+		body: JSON.stringify({
+			repositories: [`github:${gitRepositoryName}`],
+		}),
+	};
+	const response = await fetch(
+		`${BIZ_OPS_API_URL}/v2/node/System/${encodeURIComponent(
+			systemCode,
+		)}?relationshipAction=merge`,
+		options,
+	);
+	if (!response.ok) {
+		await logAndThrowError(response, {
+			systemCode,
+			method: `updateRelationships`,
+		});
+	}
+
+	return response.json();
+};
+
 module.exports = {
 	readSystem,
+	updateSystemRepository,
 };
