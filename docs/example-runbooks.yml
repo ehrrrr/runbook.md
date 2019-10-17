@@ -4,6 +4,10 @@
 # These settings determine the behaviour of runbook.md's Runbook Validator bot
 # https://github.com/financial-times/runbook.md
 
+# The bot only considers config files on the primary branch (e.g. master),
+# so we recommend that you MAKE ANY EDITS TO THIS FILE SEPARATELY
+# before making changes to runbooks
+
 # Everything below is optional
 
 runbooks:
