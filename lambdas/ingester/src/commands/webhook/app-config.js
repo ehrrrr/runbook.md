@@ -54,15 +54,6 @@ class AppConfig {
 		}
 	}
 
-	getMappedSystemCode(path) {
-		const lowerCasePath = path.toLowerCase();
-		return this.systemCodes
-			? Object.keys(this.systemCodes).find(
-					code => lowerCasePath === this.systemCodes[code],
-			  )
-			: null;
-	}
-
 	isPathExcluded(path, exclusionKey = 'exclude') {
 		return (
 			this[exclusionKey] &&

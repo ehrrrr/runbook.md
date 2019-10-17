@@ -76,3 +76,12 @@ The following error can occur when trying try to execute `make run`:
 ```
 
 In this case, check your `/etc/hosts` file and add the entry: `127.0.0.1 local.in.ft.com`.
+
+### How systemCode is picked
+
+The number is the priority. It will fallback if the value is `undefined`.
+
+1. `Code` from runbook.md
+2. `systemCodes` From .github/runbooks.yml config ([exapmle](./docs/example-runbooks.yml#L51))
+3. From file name `${system-code}_runbook.md`
+4. `systemCode` From Change API message **[Change API route only]**

@@ -1,7 +1,7 @@
 const stripHtmlComments = require('strip-html-comments');
 const runbookMd = require('../lib/parser');
 const { validate, updateBizOps } = require('../lib/external-apis');
-const { updateSystemRepository } = require('../lib/biz-ops-client');
+const { updateSystemRepository, readSystem } = require('../lib/biz-ops-client');
 const { transformCodesIntoNestedData } = require('../lib/code-validation');
 
 const transformIngestedDetails = (
@@ -31,14 +31,31 @@ const decorateError = props => {
 	return error;
 };
 
+const checkSystemCodeExists = async (systemCode, details) => {
+	try {
+		await readSystem(systemCode);
+	} catch (e) {
+		let message;
+		let code;
+		if (e.status === 404) {
+			message = 'Biz-Ops update skipped: system code not found.';
+			code = 'parse-ok-system-code-not-found';
+		} else {
+			message = `Parse & validation complete. Biz-Ops update skipped. Error from Biz-Ops: ${e.message}.`;
+			code = 'parse-ok-biz-ops-api-error';
+		}
+		throw decorateError({ message, code, details });
+	}
+};
+
 const ingest = async payload => {
 	const {
 		content: rawRunbook,
 		shouldWriteToBizOps,
-		systemCode,
 		bizOpsApiKey,
 		repository,
 	} = payload;
+
 	if (!rawRunbook) {
 		throw decorateError({
 			message: 'Runbook contents not supplied.',
@@ -67,6 +84,9 @@ const ingest = async payload => {
 
 	const details = transformIngestedDetails(parseResult, validationResult);
 
+	const systemCode =
+		(details.parseData && details.parseData.code) || payload.systemCode;
+
 	if (!shouldWriteToBizOps || shouldWriteToBizOps === 'no') {
 		return {
 			message: 'Parse & validation complete. Biz-Ops update skipped.',
@@ -93,6 +113,9 @@ const ingest = async payload => {
 			details,
 		});
 	}
+
+	// avoid to create non-existing system in BizOps
+	await checkSystemCodeExists(systemCode, details);
 
 	const { status, json: response } = await updateBizOps(
 		bizOpsApiKey,

@@ -1,14 +1,17 @@
 const logger = require('@financial-times/lambda-logger');
 const fetch = require('isomorphic-fetch');
 const https = require('https');
+const yaml = require('js-yaml');
 const { createLambda } = require('./lib/lambda');
 const { ingest } = require('./commands/ingest');
 const { json } = require('./lib/response');
 const { decodeBase64 } = require('./lib/type-helpers');
 const { parseKinesisRecord } = require('./lib/kinesis-util');
+const { detectSystemCode, runbookRx } = require('./lib/system-code');
 
 const githubApiUrl = `https://api.github.com`;
 const bizOpsApiKey = process.env.BIZ_OPS_API_KEY;
+const runbooksConfigurationCaches = {};
 
 const filterValidKinesisRecord = childLogger => (record = {}) => {
 	const { commit, eventID } = record;
@@ -87,12 +90,33 @@ class RunbookSource {
 		return this.githubAPI(path, requestOptions);
 	}
 
+	// Fetch configured runbook.yml under .github/runbook.yml
+	async getSystemCodeFromRepositoryConfig(gitRepositoryName) {
+		// Use cached map if exists because no longer we don't want to fetch each time
+		if (gitRepositoryName in runbooksConfigurationCaches) {
+			return runbooksConfigurationCaches[gitRepositoryName];
+		}
+		const path = `/repos/${gitRepositoryName}/contents/.github/runbooks.yml`;
+		let systemCodeMap;
+
+		try {
+			const { content } = await this.githubAPI(path);
+			const obj = yaml.safeLoad(decodeBase64(content));
+			systemCodeMap = (obj.runbooks || {}).systemCodes || {};
+		} catch (e) {
+			systemCodeMap = {};
+		}
+		runbooksConfigurationCaches[gitRepositoryName] = systemCodeMap;
+		return systemCodeMap;
+	}
+
 	getRunbookUrlFromModifiedFiles(files) {
-		const firstRunbookFound = files.find(({ filename }) =>
-			/runbook\.md$/i.test(filename),
-		);
-		const { contents_url: runbookUrl } = firstRunbookFound || {};
-		return runbookUrl;
+		return files
+			.filter(({ filename }) => runbookRx.test(filename))
+			.map(({ contents_url: runbookContentUrl, filename }) => ({
+				runbookContentUrl,
+				filename,
+			}));
 	}
 
 	async getRunbookIfModified(prNumber, gitRepositoryName) {
@@ -109,7 +133,7 @@ class RunbookSource {
 		return decodeBase64(content);
 	}
 
-	async getRunbookFromPR(commit, gitRepositoryName, prNumber) {
+	async getRunbooksFromPR(commit, gitRepositoryName, prNumber) {
 		if (!prNumber) {
 			const path = `/repos/${gitRepositoryName}/commits/${commit}/pulls`;
 			const [prData = {}] = await this.githubAPI(path, {
@@ -120,18 +144,31 @@ class RunbookSource {
 			});
 			prNumber = prData.number;
 		}
-		const runbookContentUrl =
+		const runbookFiles =
 			prNumber &&
 			(await this.getRunbookIfModified(prNumber, gitRepositoryName));
-		return this.getRunbookFromUrl(runbookContentUrl);
+
+		return Promise.all(
+			runbookFiles.map(async ({ runbookContentUrl, filename }) => ({
+				content: await this.getRunbookFromUrl(runbookContentUrl),
+				filename,
+			})),
+		);
 	}
 
-	async getRunbookFromCommit(commit, gitRepositoryName) {
+	async getRunbooksFromCommit(commit, gitRepositoryName) {
 		const path = `/repos/${gitRepositoryName}/commits/${commit}`;
 		const { files } = await this.githubAPI(path);
-		const runbookContentUrl =
+
+		const runbookFiles =
 			files && this.getRunbookUrlFromModifiedFiles(files);
-		return this.getRunbookFromUrl(runbookContentUrl);
+
+		return Promise.all(
+			runbookFiles.map(async ({ runbookContentUrl, filename }) => ({
+				content: await this.getRunbookFromUrl(runbookContentUrl),
+				filename,
+			})),
+		);
 	}
 }
 
@@ -186,13 +223,13 @@ const fetchRunbook = async (
 		// https://github.com/Financial-Times/next-api/pull/474
 		const [, prNumber] = gitRefUrl.match(/\/pull\/(\d+)$/) || [];
 
-		let content;
+		let runbookChanges;
 
 		if (!prNumber) {
 			childLogger.info({
 				event: 'GETTING_RUNBOOK_FROM_COMMIT',
 			});
-			content = await runbookSource.getRunbookFromCommit(
+			runbookChanges = await runbookSource.getRunbooksFromCommit(
 				commit,
 				repository,
 			);
@@ -201,14 +238,14 @@ const fetchRunbook = async (
 				event: 'GETTING_RUNBOOK_FROM_PR',
 				prNumber,
 			});
-			content = await runbookSource.getRunbookFromPR(
+			runbookChanges = await runbookSource.getRunbooksFromPR(
 				commit,
 				repository,
 				prNumber,
 			);
 		}
 
-		if (!content) {
+		if (!runbookChanges.length) {
 			throw new Error('Bailing: No runbook found in commit tree');
 		}
 
@@ -216,14 +253,22 @@ const fetchRunbook = async (
 			event: 'GOT_RUNBOOK_CONTENT',
 		});
 
-		return {
-			systemCode,
+		const configuredSystemCodes = await runbookSource.getSystemCodeFromRepositoryConfig(
+			repository,
+		);
+
+		return runbookChanges.map(({ content, filename }) => ({
 			content,
 			repository,
 			githubName,
 			runbookSource,
 			childLogger,
-		};
+			systemCode: detectSystemCode(
+				configuredSystemCodes,
+				filename,
+				systemCode,
+			),
+		}));
 	} catch (error) {
 		childLogger.error({
 			event: 'GETTING_RUNBOOK_FAILED',
@@ -239,7 +284,11 @@ const fetchRunbooks = async (parsedRecords, childLogger) => {
 		parsedRecords.map(record => fetchRunbook(record, childLogger)),
 	);
 
-	return runbooksFetched.filter(record => !!record);
+	// Flatten found runbooks
+	return runbooksFetched.reduce(
+		(runbooks, next) => [...runbooks, ...(next || [])],
+		[],
+	);
 };
 
 const ingestRunbook = async ({
@@ -371,4 +420,7 @@ const handler = ({ Records }, { awsRequestId }) => {
 
 module.exports = {
 	handler: createLambda(handler, { requireS3o: false }),
+
+	// export for testing
+	fetchRunbook,
 };

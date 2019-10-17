@@ -43,6 +43,9 @@ describe('ingest command', () => {
 		spies.transformCodesIntoNestedData = jest
 			.spyOn(bizOpsValidation, 'transformCodesIntoNestedData')
 			.mockResolvedValue({ expandedData: {}, errors: [] });
+		spies.bizOpsClient = jest
+			.spyOn(bizOpsClient, 'readSystem')
+			.mockResolvedValue({ status: 200 });
 		spies.updateSystemRepository = jest
 			.spyOn(bizOpsClient, 'updateSystemRepository')
 			.mockResolvedValue({ status: 200 });
@@ -59,6 +62,7 @@ describe('ingest command', () => {
 			});
 			expect(spies.transformCodesIntoNestedData).toHaveBeenCalled();
 			expect(spies.validate).toHaveBeenCalled();
+			expect(spies.bizOpsClient).toHaveBeenCalled();
 			expect(spies.updateBizOps).toHaveBeenCalled();
 			expect(spies.updateSystemRepository).toHaveBeenCalled();
 			expect(result).toMatchObject({
@@ -78,6 +82,54 @@ describe('ingest command', () => {
 			expect(result).toMatchObject({
 				rejected: true,
 				code: expect.stringMatching('no-content'),
+			});
+		});
+	});
+
+	describe('when content has code property', () => {
+		test('retrieves systemCode from content not from payload', async () => {
+			const systemCodeFromContent = 'system-code-from-content';
+			const { result } = await runIngest({
+				content: `# this is a name\ndescription\n## service tier\nbronze\n## code\n${systemCodeFromContent}`,
+			});
+			expect(result.details.parseData.code).toEqual(
+				systemCodeFromContent,
+			);
+		});
+	});
+
+	describe('when systemCode does not exist in BizOps', () => {
+		test('and writing to biz-ops is enabled, fail', async () => {
+			spies.bizOpsClient = jest
+				.spyOn(bizOpsClient, 'readSystem')
+				.mockRejectedValue({ status: 404 });
+			const { result, parseData } = await runIngest({
+				shouldWriteToBizOps: true,
+			});
+			expect(result).toMatchObject({
+				rejected: true,
+				code: expect.stringMatching('parse-ok-system-code-not-found'),
+				details: {
+					parseData,
+				},
+			});
+		});
+	});
+
+	describe("when BizOps api threw an error when check systemCode's existence", () => {
+		test('and writing to biz-ops is enabled, fail', async () => {
+			spies.bizOpsClient = jest
+				.spyOn(bizOpsClient, 'readSystem')
+				.mockRejectedValue({ status: 500 });
+			const { result, parseData } = await runIngest({
+				shouldWriteToBizOps: true,
+			});
+			expect(result).toMatchObject({
+				rejected: true,
+				code: expect.stringMatching('parse-ok-biz-ops-api-error'),
+				details: {
+					parseData,
+				},
 			});
 		});
 	});

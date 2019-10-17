@@ -1,13 +1,13 @@
-const { basename } = require('path');
 const { ingest } = require('../ingest');
 const { RunbookSourcer } = require('./runbook-sourcer');
 const { put: storeResult } = require('../../lib/dynamodb-client');
 const { isStringNotEmpty, decodeBase64 } = require('../../lib/type-helpers');
+const { detectSystemCode } = require('../../lib/system-code');
 
 const bizOpsApiKey = process.env.BIZ_OPS_API_KEY;
 
 class RunbookProcessor extends RunbookSourcer {
-	async processRunbook(context, { sha, path, content, systemCode }) {
+	async processRunbook(context, { sha, path, content }) {
 		const runbook = {
 			sha,
 			path,
@@ -19,13 +19,9 @@ class RunbookProcessor extends RunbookSourcer {
 		if (!runbook.content) {
 			return null;
 		}
-		// infer runbook system code from config
-		// then from file name
-		systemCode = (
-			systemCode ||
-			this.getMappedSystemCode(path) ||
-			this.parseSystemCode(path)
-		).trim();
+
+		const systemCode = detectSystemCode(this.systemCodes, path);
+
 		if (isStringNotEmpty(systemCode)) {
 			runbook.systemCode = systemCode;
 		} else {
@@ -63,9 +59,10 @@ class RunbookProcessor extends RunbookSourcer {
 	}
 
 	async ingestRunbook(runbook) {
-		const shouldWriteToBizOps = runbook.systemCode
-			? this.isWriteToBizOpsEnabled(this.branch, runbook.path)
-			: false;
+		const shouldWriteToBizOps = this.isWriteToBizOpsEnabled(
+			this.branch,
+			runbook.path,
+		);
 
 		const childLogger = this.logger.child({
 			shouldWriteToBizOps,
@@ -133,12 +130,6 @@ class RunbookProcessor extends RunbookSourcer {
 			});
 			return false;
 		}
-	}
-
-	parseSystemCode(path) {
-		return basename(path)
-			.replace(this.runbookRx, '')
-			.slice(0, -1);
 	}
 }
 

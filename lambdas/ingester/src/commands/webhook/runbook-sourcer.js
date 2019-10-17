@@ -1,7 +1,6 @@
 const { WebhookResponder } = require('./webhook-responder');
 const { isStringNotEmpty, isArrayNotEmpty } = require('../../lib/type-helpers');
-
-const runbookRx = /runbook\.md$/i;
+const { runbookRx } = require('../../lib/system-code');
 
 class RunbookSourcer extends WebhookResponder {
 	constructor(context, config) {
