@@ -55,8 +55,10 @@ exports.ParseErrors = ({ errors }) => {
 	const tableProps = {
 		caption: 'Parse Errors',
 		columns: ['Message'],
-		rows: errors.map(({ line, message }) => [
-			line ? `${message} on or around line ${line}` : message,
+		rows: errors.map(({ line, actualLine, message }) => [
+			line
+				? `${message} on or around line ${actualLine || line}`
+				: message,
 		]),
 	};
 	return (

@@ -3,6 +3,7 @@ const runbookMd = require('../lib/parser');
 const { validate, updateBizOps } = require('../lib/external-apis');
 const { updateSystemRepository, readSystem } = require('../lib/biz-ops-client');
 const { transformCodesIntoNestedData } = require('../lib/code-validation');
+const setActualLineNumber = require('../lib/set-actual-line-number');
 
 const transformIngestedDetails = (
 	parseResult,
@@ -62,9 +63,13 @@ const ingest = async payload => {
 			code: 'no-content',
 		});
 	}
+
 	const content = stripHtmlComments(rawRunbook);
 	// parse RUNBOOK.MD to JSON to return {data, errors}
 	const parseResult = await runbookMd.parseRunbookString(content);
+	if (parseResult && parseResult.errors) {
+		setActualLineNumber(rawRunbook, content, parseResult.errors);
+	}
 	// validate codes in JSON against the Biz Ops to return {expandedData, errors}
 	const expandedResult = await transformCodesIntoNestedData(parseResult.data);
 
