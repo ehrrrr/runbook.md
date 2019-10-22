@@ -2,6 +2,7 @@ const visit = require('unist-util-visit-parents');
 const convertNodeToProblem = require('./convert-node-to-problem');
 
 const excludedProperties = [
+	'lastReleaseTimestamp',
 	'dependentCapabilities',
 	'dependentProducts',
 	'dependents',

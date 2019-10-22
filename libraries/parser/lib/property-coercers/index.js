@@ -136,3 +136,6 @@ module.exports = {
 		}
 	},
 };
+
+module.exports.DateTime = module.exports.Date;
+module.exports.Timestamp = module.exports.Date;
