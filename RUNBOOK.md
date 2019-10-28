@@ -1,6 +1,6 @@
 # runbook.md
 
-This project provides tech teams at the FT with a simple method of populating Biz Ops from the content of a runbook file (`/runbook.md$/i`) in their GitHub repository. It comprises of these parts: a Form, a Github App and Change API event handler.
+This project provides engineering teams at the FT with a simple method of populating Biz-Ops from the content of a runbook file (`/runbook.md$/i`) in their GitHub repository. It comprises of these parts: a Form, a Github App and Change API event handler.
 
 ## Primary URL
 
