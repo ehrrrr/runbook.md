@@ -5,12 +5,14 @@ const httpError = require('http-errors');
 const { BIZ_OPS_API_URL, BIZ_OPS_API_KEY } = process.env;
 
 const extractErrorMessage = async response => {
+	if (response.json) {
+		response = await response.json();
+	}
 	let errorMessage;
 	try {
-		const errors = await response.json();
-		errorMessage = errors.errors
-			? errors.errors.map(error => error.message).join('\n')
-			: errors.error;
+		errorMessage = response.errors
+			? response.errors.map(error => error.message).join('\n')
+			: response.error;
 	} catch (err) {
 		errorMessage = response.statusText;
 	}
@@ -30,28 +32,28 @@ const logAndThrowError = async (response, props) => {
 	throw error;
 };
 
-const readSystem = async code => {
-	const options = {
+const graphql = (query, variables = {}) =>
+	fetch(`${BIZ_OPS_API_URL}/graphql`, {
 		method: 'GET',
 		headers: {
 			'x-api-key': BIZ_OPS_API_KEY,
 			'client-id': 'biz-ops-runbook-md',
 			'content-type': 'application/json',
 		},
-	};
-	const response = await fetch(
-		`${BIZ_OPS_API_URL}/v2/node/System/${encodeURIComponent(code)}`,
-		options,
-	);
-	if (!response.ok) {
-		await logAndThrowError(response, {
-			code,
-			method: 'read',
-		});
-	}
-
-	return response.json();
-};
+		body: JSON.stringify({ query, variables }),
+	}).then(async response => {
+		if (!response.ok) {
+			await logAndThrowError(response, {
+				code,
+				method: 'read',
+			});
+		}
+		const json = await response.json();
+		if (json.errors) {
+			logAndThrowError(json);
+		}
+		return json;
+	});
 
 const updateSystemRepository = async (systemCode, gitRepositoryName) => {
 	const options = {

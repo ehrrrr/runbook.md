@@ -1,6 +1,20 @@
 const schema = require('@financial-times/biz-ops-schema');
-const { readSystem } = require('./biz-ops-client');
+const { graphql } = require('./biz-ops-client');
 const runbookMd = require('../../../../libraries/parser');
+
+const isForbiddenType = prop =>
+	['DateTime', 'Date', 'Time'].includes(prop.type);
+
+const getValidProperties = type => {
+	return Object.entries(
+		schema.getType(type, {
+			includeMetaFields: false,
+		}).properties,
+	)
+		.filter(([, property]) => !isForbiddenType(property))
+		.map(([name]) => name)
+		.join('\n');
+};
 
 const desirableFields = [
 	'primaryURL',
@@ -37,17 +51,6 @@ const uncamelCase = str =>
 exports.generate = async systemCode => {
 	const { excludedProperties } = runbookMd(schema);
 
-	const data = await readSystem(systemCode);
-	const preamble = `<!--
-    Written in the format prescribed by https://github.com/Financial-Times/runbook.md.
-    Any future edits should abide by this format.
--->
-# ${data.name || '<!-- Enter a name  -->'}
-
-${data.description || '<!-- Enter a description  -->'}`;
-	delete data.name;
-	delete data.description;
-
 	const systemSchema = schema.getType('System', { groupProperties: true });
 
 	const enums = schema.getEnums();
@@ -67,6 +70,25 @@ ${data.description || '<!-- Enter a description  -->'}`;
 			({ name, deprecationReason }) =>
 				!deprecationReason && !excludedProperties.includes(name),
 		);
+
+	const {
+		data: { System: data },
+	} = await graphql(
+		`query getSystem($systemCode: String!) {
+	   System (code: $systemCode) {${fields.map(({ name }) => name).join(' ')}}
+	}`,
+		{ systemCode },
+	);
+
+	const preamble = `<!--
+    Written in the format prescribed by https://github.com/Financial-Times/runbook.md.
+    Any future edits should abide by this format.
+-->
+# ${data.name || '<!-- Enter a name  -->'}
+
+${data.description || '<!-- Enter a description  -->'}`;
+	delete data.name;
+	delete data.description;
 
 	const outputValue = ({
 		name,
