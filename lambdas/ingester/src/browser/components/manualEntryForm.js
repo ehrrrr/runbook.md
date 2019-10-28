@@ -56,6 +56,7 @@ module.exports = function(form) {
 		const populate = async () => {
 			const systemCode = form.querySelector('#import-system-code').value;
 			if (!systemCode) {
+				// eslint-disable-next-line no-alert
 				window.alert('Please enter a system code');
 				return;
 			}
@@ -75,7 +76,7 @@ module.exports = function(form) {
 		};
 
 		choiceForm.addEventListener('keyup', ev => {
-			if (ev.keyCode === 13) {
+			if (ev.key === 'Enter') {
 				ev.preventDefault();
 				ev.stopPropagation();
 				populate();
@@ -104,7 +105,6 @@ module.exports = function(form) {
 	});
 	// import-from-biz-ops
 	submitButton.addEventListener('click', ev => {
-		console.log('asdlsakj dsajkhd sajkdh jh jh ');
 		if (avoidPrematureSubmission(ev)) {
 			return false;
 		}

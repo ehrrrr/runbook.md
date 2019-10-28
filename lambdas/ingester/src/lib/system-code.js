@@ -2,19 +2,18 @@ const { basename } = require('path');
 
 const runbookRx = /runbook\.md$/i;
 
-const getMappedSystemCode = (systemCodeMap, path) => {
+const getMappedSystemCode = (systemCodeMap = {}, path) => {
 	const lowerCasePath = path.toLowerCase();
-	return systemCodeMap
-		? Object.keys(systemCodeMap).find(
-				code => lowerCasePath === systemCodeMap[code].toLowerCase(),
-		  )
-		: null;
+	return Object.keys(systemCodeMap).find(
+		code => lowerCasePath === systemCodeMap[code].toLowerCase(),
+	);
 };
 
 const parseSystemCode = path => {
-	return basename(path)
+	const parsedSystemCode = basename(path)
 		.replace(runbookRx, '')
 		.slice(0, -1);
+	return parsedSystemCode.length ? parsedSystemCode : null;
 };
 
 // We should consider with priority of system code detection as following order:

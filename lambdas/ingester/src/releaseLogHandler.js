@@ -75,6 +75,8 @@ class RunbookSource {
 
 	postRunbookIssue(gitRepositoryName, githubName, errorCause, systemCode) {
 		const path = `/repos/${gitRepositoryName}/issues`;
+		// TODO: change the debugging info, it's misleading
+		// The Change API logs are not helpful here and the splunk query is wrong
 		const requestOptions = {
 			method: 'POST',
 			body: JSON.stringify({
@@ -90,7 +92,7 @@ class RunbookSource {
 		return this.githubAPI(path, requestOptions);
 	}
 
-	// Fetch configured runbook.yml under .github/runbook.yml
+	// Fetch configured runbooks.yml under .github/runbooks.yml
 	async getSystemCodeFromRepositoryConfig(gitRepositoryName) {
 		// Use cached map if exists because no longer we don't want to fetch each time
 		if (gitRepositoryName in runbooksConfigurationCaches) {
@@ -101,8 +103,9 @@ class RunbookSource {
 
 		try {
 			const { content } = await this.githubAPI(path);
-			const obj = yaml.safeLoad(decodeBase64(content));
-			systemCodeMap = (obj.runbooks || {}).systemCodes || {};
+			const { runbooks = {} } =
+				yaml.safeLoad(decodeBase64(content)) || {};
+			systemCodeMap = runbooks.systemCodes;
 		} catch (e) {
 			systemCodeMap = {};
 		}
@@ -286,7 +289,7 @@ const fetchRunbooks = async (parsedRecords, childLogger) => {
 
 	// Flatten found runbooks
 	return runbooksFetched.reduce(
-		(runbooks, next) => [...runbooks, ...(next || [])],
+		(runbooks, next = []) => [...runbooks, ...next],
 		[],
 	);
 };

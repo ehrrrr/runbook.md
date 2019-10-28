@@ -14,8 +14,7 @@ const Header = () => {
 							<span className="o-message__content-highlight">
 								This project is currently in BETA
 							</span>
-							{', '}
-							please provide feedback, or volunteer to take part
+							, please provide feedback, or volunteer to take part
 							in UX testing, in the{' '}
 							<a
 								href="https://financialtimes.slack.com/messages/CEJ2Z6EPJ"

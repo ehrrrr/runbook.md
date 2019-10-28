@@ -15,19 +15,16 @@ const s3oHandler = (loggerInstance, event, callback) =>
 		throw error;
 	});
 
-const formatEventForLogs = event =>
-	Object.assign(
-		{
-			region: process.env.AWS_REGION || 'unknown',
-		},
-		omit(event, [
-			'requestContext',
-			'headers',
-			'stageVariables',
-			'isOffline',
-			'Records',
-		]),
-	);
+const formatEventForLogs = event => ({
+	region: process.env.AWS_REGION || 'unknown',
+	...omit(event, [
+		'requestContext',
+		'headers',
+		'stageVariables',
+		'isOffline',
+		'Records',
+	]),
+});
 
 const createLambda = (
 	handler,
@@ -86,10 +83,7 @@ const createLambda = (
 			const { isSignedIn, username } = result;
 
 			return handler(
-				Object.assign({}, event, {
-					isSignedIn,
-					s3oUsername: username,
-				}),
+				{ ...event, isSignedIn, s3oUsername: username },
 				context,
 			);
 		})

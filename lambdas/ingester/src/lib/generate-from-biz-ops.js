@@ -52,12 +52,14 @@ ${data.description || '<!-- Enter a description  -->'}`;
 
 	const enums = schema.getEnums();
 
+	// eslint-disable-next-line unicorn/prefer-flat-map
 	const fields = []
 		.concat(
 			...Object.values(systemSchema.fieldsets).map(({ properties }) =>
-				Object.entries(properties).map(([name, def]) =>
-					Object.assign({ name }, def),
-				),
+				Object.entries(properties).map(([name, def]) => ({
+					name,
+					...def,
+				})),
 			),
 		)
 		.filter(({ name }) => name in data || desirableFields.includes(name))

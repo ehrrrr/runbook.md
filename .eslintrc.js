@@ -18,10 +18,20 @@ module.exports = {
 			env: {
 				jest: true,
 			},
+			rules: {
+				'unicorn/consistent-function-scoping': [0],
+			},
 		},
 		{
-			env: {browser: true},
-			files: 'lambdas/**/browser/**/*.js'
-		}
+			env: { browser: true },
+			files: 'lambdas/**/browser/**/*.js',
+		},
+		{
+			rules: {
+				'unicorn/consistent-function-scoping': [0],
+				'react/jsx-props-no-spreading': [1],
+			},
+			files: 'lambdas/**/*.jsx',
+		},
 	],
 };

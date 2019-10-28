@@ -114,11 +114,10 @@ class RunbookProcessor extends RunbookSourcer {
 
 	async storeIngestResult(runbook) {
 		try {
-			await storeResult(
-				this.repository,
-				runbook.sha,
-				Object.assign({ commitSha: this.sha }, runbook),
-			);
+			await storeResult(this.repository, runbook.sha, {
+				commitSha: this.sha,
+				...runbook,
+			});
 			this.logger.info({
 				event: 'STORE_RESULT_SUCCESS',
 			});

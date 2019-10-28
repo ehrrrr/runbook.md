@@ -60,7 +60,7 @@ describe('webhook', () => {
 
 	beforeEach(() => {
 		Object.assign(ctx, {
-			repo: args => Object.assign({ owner, repo }, args || {}),
+			repo: args => ({ owner, repo, ...(args || {}) }),
 			config: jest.fn(),
 			github: {
 				git: {
