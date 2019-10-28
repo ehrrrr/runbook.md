@@ -63,7 +63,9 @@ module.exports = {
 						loader: require.resolve('sass-loader'),
 						options: {
 							sourceMap: true,
-							includePaths: ['bower_components'],
+							sassOptions: {
+								includePaths: ['bower_components'],
+							},
 						},
 					},
 				],
