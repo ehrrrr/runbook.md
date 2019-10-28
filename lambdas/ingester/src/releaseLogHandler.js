@@ -2,6 +2,7 @@ const logger = require('@financial-times/lambda-logger');
 const fetch = require('isomorphic-fetch');
 const https = require('https');
 const yaml = require('js-yaml');
+const querystring = require('querystring');
 const { createLambda } = require('./lib/lambda');
 const { ingest } = require('./commands/ingest');
 const { json } = require('./lib/response');
@@ -73,20 +74,43 @@ class RunbookSource {
 		this.githubAPI = githubAPI;
 	}
 
-	postRunbookIssue(gitRepositoryName, githubName, errorCause, systemCode) {
-		const path = `/repos/${gitRepositoryName}/issues`;
+	postRunbookIssue({
+		commit,
+		repository,
+		githubName,
+		errorCause,
+		systemCode,
+		awsRequestId,
+	}) {
+		const author = githubName ? ` (FYI, @${githubName})` : '';
+		const commitUrl = `[#${commit.slice(
+			0,
+			7,
+		)}](https://github.com/${repository}/commit/${commit})`;
+		const splunkQuery = `index=aws_cloudwatch source="/aws/lambda/biz-ops-runbook-md-prod-releaseLog" awsRequestId="${awsRequestId}"`;
+		const path = `/repos/${repository}/issues`;
 		// TODO: change the debugging info, it's misleading
 		// The Change API logs are not helpful here and the splunk query is wrong
 		const requestOptions = {
 			method: 'POST',
 			body: JSON.stringify({
 				title: 'runbook.md automated runbook ingestion failure',
-				body: `@${githubName}, there was an error synchronising runbook data with Biz-Ops: ${errorCause}.
-				This automated operation was triggered by a recent release.
-				Logged in [Change API](https://financialtimes.splunkcloud.com/en-GB/app/search/search?q=search%20index%3D%22aws_cloudwatch%22%20source%3D%22%2Faws%2Flambda%2Fchange-request*).
-				You can find further details about what went wrong on [Splunk](https://financialtimes.splunkcloud.com/en-US/app/search/search?q=search%20index%3Daws_cloudwatch%20source%3D${systemCode})
-				Need help? [Slack us](https://financialtimes.slack.com/messages/CFR0GPCAH)
-				Issue posted automatically by [runbook.md](https://runbooks.in.ft.com/)`,
+				body: `There was an error synchronising runbook data with Biz-Ops: 
+
+				\`\`\`
+				${errorCause}
+				\`\`\`
+
+				This automated operation was triggered by a recent release - commit ${commitUrl}${author}.
+				You can find further details about what went wrong on [Splunk](https://financialtimes.splunkcloud.com/en-GB/app/search/search?q=search%20${querystring.escape(
+					splunkQuery,
+				)}).
+				
+				Need help? Slack us in [#runbooks-in-repos](https://financialtimes.slack.com/messages/CFR0GPCAH)
+
+				Please check [your most recent production runbook](https://runbooks.in.ft.com/${systemCode}) and alert Operations if any critical details are missing.
+
+				Issue posted automatically by [runbook.md](https://github.com/Financial-Times/runbook.md).`,
 			}),
 		};
 		return this.githubAPI(path, requestOptions);
@@ -136,17 +160,25 @@ class RunbookSource {
 		return decodeBase64(content);
 	}
 
+	async getRelatedPRFromCommit(commit, gitRepositoryName) {
+		const path = `/repos/${gitRepositoryName}/commits/${commit}/pulls`;
+		const [prData = {}] = await this.githubAPI(path, {
+			// Listing branches or pull requests for a commit in the Commits API
+			// is currently in developer preview
+			// 'https://developer.github.com/v3/repos/commits/#list-pull-requests-associated-with-commit'
+			previewMode: true,
+		});
+		return prData.number;
+	}
+
+	getPRfromGitRefUrl(gitRefUrl) {
+		const [, prNumber] = gitRefUrl
+			? gitRefUrl.match(/\/pull\/(\d+)$/) || []
+			: [];
+		return prNumber;
+	}
+
 	async getRunbooksFromPR(commit, gitRepositoryName, prNumber) {
-		if (!prNumber) {
-			const path = `/repos/${gitRepositoryName}/commits/${commit}/pulls`;
-			const [prData = {}] = await this.githubAPI(path, {
-				// Listing branches or pull requests for a commit in the Commits API
-				// is currently in developer preview
-				// 'https://developer.github.com/v3/repos/commits/#list-pull-requests-associated-with-commit'
-				previewMode: true,
-			});
-			prNumber = prData.number;
-		}
 		const runbookFiles =
 			prNumber &&
 			(await this.getRunbookIfModified(prNumber, gitRepositoryName));
@@ -179,6 +211,7 @@ const fetchRunbook = async (
 	{
 		commit,
 		systemCode,
+		gitRepositoryName,
 		githubData: { htmlUrl: gitRefUrl },
 		user: { githubName },
 		eventID,
@@ -202,29 +235,44 @@ const fetchRunbook = async (
 		githubAPI: createGithubAPIClient(childLogger),
 	});
 
-	let repository;
+	let repository = gitRepositoryName;
 
 	try {
-		if (!gitRefUrl) {
-			throw new Error('Invalid github reference URL');
+		if (!repository) {
+			if (!gitRefUrl) {
+				throw new Error('Invalid github reference URL');
+			}
+
+			const [repoName] =
+				gitRefUrl
+					.replace('https://github.com/', '')
+					.match(/[a-z0-9_.-]+\/[a-z0-9_.-]+/i) || [];
+
+			if (!repoName) {
+				throw new Error(
+					'Could not parse repository name from github reference URL',
+				);
+			}
+
+			repository = repoName;
 		}
 
-		const [repoName] =
-			gitRefUrl
-				.replace('https://github.com/', '')
-				.match(/[a-z0-9_.-]+\/[a-z0-9_.-]+/i) || [];
+		let prNumber;
 
-		if (!repoName) {
-			throw new Error(
-				'Could not parse repository name from github reference URL',
+		// if provided, gitRefUrl can tell us whether we should
+		// check for files in the PR rather than in the commit
+		if (gitRefUrl) {
+			prNumber = runbookSource.getPRfromGitRefUrl(gitRefUrl);
+		}
+
+		// if there is no gitRefUrl, or gitRefUrl does not reference a PR,
+		// try using the github API to get the PR related to the commit
+		if (!prNumber) {
+			prNumber = await runbookSource.getRelatedPRFromCommit(
+				commit,
+				repository,
 			);
 		}
-
-		repository = repoName;
-
-		// the gitRefUrl can tell us whether we have a PR on our hands...
-		// https://github.com/Financial-Times/next-api/pull/474
-		const [, prNumber] = gitRefUrl.match(/\/pull\/(\d+)$/) || [];
 
 		let runbookChanges;
 
@@ -261,6 +309,7 @@ const fetchRunbook = async (
 		);
 
 		return runbookChanges.map(({ content, filename }) => ({
+			commit,
 			content,
 			repository,
 			githubName,
@@ -294,14 +343,18 @@ const fetchRunbooks = async (parsedRecords, childLogger) => {
 	);
 };
 
-const ingestRunbook = async ({
-	systemCode,
-	content,
-	repository,
-	githubName,
-	childLogger,
-	runbookSource,
-}) => {
+const ingestRunbook = async (
+	{
+		commit,
+		systemCode,
+		content,
+		repository,
+		githubName,
+		childLogger,
+		runbookSource,
+	},
+	awsRequestId,
+) => {
 	try {
 		const result = await ingest({
 			systemCode,
@@ -326,22 +379,24 @@ const ingestRunbook = async ({
 			error,
 		});
 
-		if (repository && githubName) {
-			await runbookSource.postRunbookIssue(
+		if (repository) {
+			await runbookSource.postRunbookIssue({
+				commit,
 				repository,
 				githubName,
-				error.message,
+				errorCause: error.message,
 				systemCode,
-			);
+				awsRequestId,
+			});
 		}
 
 		return null;
 	}
 };
 
-const ingestRunbooks = async runbookInstances => {
+const ingestRunbooks = async (runbookInstances, awsRequestId) => {
 	const runbooksIngested = await Promise.all(
-		runbookInstances.map(runbook => ingestRunbook(runbook)),
+		runbookInstances.map(runbook => ingestRunbook(runbook, awsRequestId)),
 	);
 
 	return runbooksIngested.filter(runbook => !!runbook);
@@ -349,9 +404,9 @@ const ingestRunbooks = async runbookInstances => {
 
 const getRecordIDs = records => records.map(({ eventID }) => eventID);
 
-const processRunbookMd = async parsedRecords => {
+const processRunbookMd = async (parsedRecords, parentLogger, awsRequestId) => {
 	const eventIDs = getRecordIDs(parsedRecords);
-	const childLogger = logger.child({ eventIDs });
+	const childLogger = parentLogger.child({ eventIDs });
 
 	try {
 		// this does not reject or throw, instead it will return an empty array
@@ -362,17 +417,26 @@ const processRunbookMd = async parsedRecords => {
 			childLogger,
 		);
 
+		const decorateError = message => {
+			const e = new Error(message);
+			e.awsRequestId = awsRequestId;
+			throw e;
+		};
+
 		if (!runbookInstances.length) {
-			throw new Error('Bailing, could not fetch any runbooks.');
+			decorateError('Bailing, could not fetch any runbooks.');
 		}
 
 		// this also does not reject or throw, instead it will return an empty array
 		// if no ingests were successful
 		// all errors are handled within, including posting of github issues
-		const ingestedRunbooks = await ingestRunbooks(runbookInstances);
+		const ingestedRunbooks = await ingestRunbooks(
+			runbookInstances,
+			awsRequestId,
+		);
 
 		if (!ingestedRunbooks.length) {
-			throw new Error('Bailing, could not ingest any runbooks.');
+			decorateError('Bailing, could not ingest any runbooks.');
 		}
 
 		return json(200, {
@@ -395,7 +459,7 @@ const processRunbookMd = async parsedRecords => {
 
 const handler = ({ Records }, { awsRequestId }) => {
 	const eventIDs = getRecordIDs(Records);
-	const childLogger = logger.child({ awsRequestId, eventIDs });
+	const childLogger = logger.child({ awsRequestId });
 
 	childLogger.info({
 		event: 'RELEASE_TRIGGERED',
@@ -418,7 +482,7 @@ const handler = ({ Records }, { awsRequestId }) => {
 		});
 	}
 
-	return processRunbookMd(parsedRecords);
+	return processRunbookMd(parsedRecords, childLogger, awsRequestId);
 };
 
 module.exports = {
