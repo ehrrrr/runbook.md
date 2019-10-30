@@ -1,7 +1,10 @@
 const stripHtmlComments = require('strip-html-comments');
 const runbookMd = require('../lib/parser');
 const { validate, updateBizOps } = require('../lib/external-apis');
-const { updateSystemRepository, graphql } = require('../lib/biz-ops-client');
+const {
+	updateSystemRepository,
+	systemHeadRequest,
+} = require('../lib/biz-ops-client');
 const { transformCodesIntoNestedData } = require('../lib/code-validation');
 const setActualLineNumber = require('../lib/set-actual-line-number');
 
@@ -33,27 +36,19 @@ const decorateError = props => {
 };
 
 const checkSystemCodeExists = async (systemCode, details) => {
-	let data;
 	try {
-		({ data } = await graphql(
-			`query getSystem($systemCode: String!) {
-	   System (code: $systemCode) {code}}
-	}`,
-			{ systemCode },
-		));
+		await systemHeadRequest(systemCode);
 	} catch (e) {
-		throw decorateError({
-			message: `Parse & validation complete. Biz-Ops update skipped. Error from Biz-Ops: ${e.message}.`,
-			code: 'parse-ok-biz-ops-api-error',
-			details,
-		});
-	}
-	if (!data.System) {
-		throw decorateError({
-			message: 'Biz-Ops update skipped: system code not found.',
-			code: 'parse-ok-system-code-not-found',
-			details,
-		});
+		let message;
+		let code;
+		if (e.status === 404) {
+			message = 'Biz-Ops update skipped: system code not found.';
+			code = 'parse-ok-system-code-not-found';
+		} else {
+			message = `Parse & validation complete. Biz-Ops update skipped. Error from Biz-Ops: ${e.message}.`;
+			code = 'parse-ok-biz-ops-api-error';
+		}
+		throw decorateError({ message, code, details });
 	}
 };
 

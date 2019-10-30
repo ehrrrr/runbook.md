@@ -5,17 +5,23 @@ const httpError = require('http-errors');
 const { BIZ_OPS_API_URL, BIZ_OPS_API_KEY } = process.env;
 
 const extractErrorMessage = async response => {
-	if (response.json) {
-		response = await response.json();
-	}
 	let errorMessage;
-	try {
-		errorMessage = response.errors
-			? response.errors.map(error => error.message).join('\n')
-			: response.error;
-	} catch (err) {
-		errorMessage = response.statusText;
+	if (response.headers && response.headers.has('debug-error')) {
+		errorMessage = response.headers.get('debug-error');
+	} else {
+		if (response.json) {
+			response = await response.json();
+		}
+
+		try {
+			errorMessage = response.errors
+				? response.errors.map(error => error.message).join('\n')
+				: response.error;
+		} catch (err) {
+			errorMessage = response.statusText;
+		}
 	}
+
 	return httpError(response.status, errorMessage);
 };
 
@@ -34,7 +40,7 @@ const logAndThrowError = async (response, props) => {
 
 const graphql = (query, variables = {}) =>
 	fetch(`${BIZ_OPS_API_URL}/graphql`, {
-		method: 'GET',
+		method: 'POST',
 		headers: {
 			'x-api-key': BIZ_OPS_API_KEY,
 			'client-id': 'biz-ops-runbook-md',
@@ -44,8 +50,7 @@ const graphql = (query, variables = {}) =>
 	}).then(async response => {
 		if (!response.ok) {
 			await logAndThrowError(response, {
-				code,
-				method: 'read',
+				method: 'graphql',
 			});
 		}
 		const json = await response.json();
@@ -83,7 +88,29 @@ const updateSystemRepository = async (systemCode, gitRepositoryName) => {
 	return response.json();
 };
 
+const systemHeadRequest = async code => {
+	const options = {
+		method: 'HEAD',
+		headers: {
+			'x-api-key': BIZ_OPS_API_KEY,
+			'client-id': 'biz-ops-runbook-md',
+			'content-type': 'application/json',
+		},
+	};
+	const response = await fetch(
+		`${BIZ_OPS_API_URL}/v2/node/System/${encodeURIComponent(code)}`,
+		options,
+	);
+	if (!response.ok) {
+		await logAndThrowError(response, {
+			code,
+			method: 'read',
+		});
+	}
+};
+
 module.exports = {
-	readSystem,
+	graphql,
+	systemHeadRequest,
 	updateSystemRepository,
 };

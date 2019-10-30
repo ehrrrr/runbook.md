@@ -44,7 +44,7 @@ describe('ingest command', () => {
 			.spyOn(bizOpsValidation, 'transformCodesIntoNestedData')
 			.mockResolvedValue({ expandedData: {}, errors: [] });
 		spies.bizOpsClient = jest
-			.spyOn(bizOpsClient, 'readSystem')
+			.spyOn(bizOpsClient, 'systemHeadRequest')
 			.mockResolvedValue({ status: 200 });
 		spies.updateSystemRepository = jest
 			.spyOn(bizOpsClient, 'updateSystemRepository')
@@ -101,7 +101,7 @@ describe('ingest command', () => {
 	describe('when systemCode does not exist in BizOps', () => {
 		test('and writing to biz-ops is enabled, fail', async () => {
 			spies.bizOpsClient = jest
-				.spyOn(bizOpsClient, 'readSystem')
+				.spyOn(bizOpsClient, 'systemHeadRequest')
 				.mockRejectedValue({ status: 404 });
 			const { result, parseData } = await runIngest({
 				shouldWriteToBizOps: true,
@@ -119,7 +119,7 @@ describe('ingest command', () => {
 	describe("when BizOps api threw an error when check systemCode's existence", () => {
 		test('and writing to biz-ops is enabled, fail', async () => {
 			spies.bizOpsClient = jest
-				.spyOn(bizOpsClient, 'readSystem')
+				.spyOn(bizOpsClient, 'systemHeadRequest')
 				.mockRejectedValue({ status: 500 });
 			const { result, parseData } = await runIngest({
 				shouldWriteToBizOps: true,

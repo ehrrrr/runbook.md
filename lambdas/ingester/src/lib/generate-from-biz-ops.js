@@ -65,7 +65,7 @@ exports.generate = async systemCode => {
 				})),
 			),
 		)
-		.filter(({ name }) => name in data || desirableFields.includes(name))
+		.filter(({ name }) => desirableFields.includes(name))
 		.filter(
 			({ name, deprecationReason }) =>
 				!deprecationReason && !excludedProperties.includes(name),
@@ -75,7 +75,12 @@ exports.generate = async systemCode => {
 		data: { System: data },
 	} = await graphql(
 		`query getSystem($systemCode: String!) {
-	   System (code: $systemCode) {${fields.map(({ name }) => name).join(' ')}}
+	   System (code: $systemCode) {code ${fields
+			.map(
+				({ name, isRelationship }) =>
+					`${name} ${isRelationship ? ' {code}' : ''}`,
+			)
+			.join(' ')}}
 	}`,
 		{ systemCode },
 	);
@@ -97,13 +102,17 @@ ${data.description || '<!-- Enter a description  -->'}`;
 		type,
 		description,
 	}) => {
-		if (name in data) {
+		if (data[name] !== null) {
 			if (type === 'Boolean') {
 				return data[name] ? 'Yes' : 'No';
 			}
 
 			if (isRelationship && hasMany) {
-				return data[name].map(code => `- ${code}`).join('\n');
+				return data[name].map(({ code }) => `- ${code}`).join('\n');
+			}
+
+			if (isRelationship) {
+				return data[name].code;
 			}
 
 			return data[name];

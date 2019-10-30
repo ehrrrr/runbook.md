@@ -223,7 +223,7 @@ describe('Release log handler', () => {
 	// check whether givenSystemCode matches an existing Biz Ops systemCode
 	const addBizOpsAPIClientInterceptor = ({ systemCode }) =>
 		nock(getBizOpsApiBaseUrl())
-			.get(`/biz-ops/v2/node/System/${systemCode}`)
+			.head(`/biz-ops/v2/node/System/${systemCode}`)
 			.reply(200, {});
 
 	const addBizOpsAPIRelationshipInterceptor = ({ systemCode }) =>
