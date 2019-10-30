@@ -4,36 +4,31 @@ const httpError = require('http-errors');
 
 const { BIZ_OPS_API_URL, BIZ_OPS_API_KEY } = process.env;
 
-const extractErrorMessage = async response => {
+const extractErrorMessageFromJson = json => {
 	let errorMessage;
-	if (response.headers && response.headers.has('debug-error')) {
-		errorMessage = response.headers.get('debug-error');
-	} else {
-		if (response.json) {
-			response = await response.json();
-		}
 
-		try {
-			errorMessage = response.errors
-				? response.errors.map(error => error.message).join('\n')
-				: response.error;
-		} catch (err) {
-			errorMessage = response.statusText;
-		}
+	try {
+		errorMessage = json.errors
+			? json.errors.map(error => error.message).join('\n')
+			: json.error;
+	} catch (err) {
+		errorMessage = json.statusText;
 	}
-
-	return httpError(response.status, errorMessage);
+	return errorMessage;
 };
 
-const logAndThrowError = async (response, props) => {
-	const error = await extractErrorMessage(response);
+const extractErrorMessageFromResponse = async response =>
+	extractErrorMessageFromJson(await response.json());
+
+const logAndThrowError = async (status, message, props) => {
+	const error = httpError(status, message);
 	logger.error(
 		{
 			error,
 			event: 'BIZ_OPS_API_FAILURE',
 		},
 		props,
-		`Biz Ops api call failed with status ${response.status}`,
+		`Biz Ops api call failed with status ${status}`,
 	);
 	throw error;
 };
@@ -55,7 +50,7 @@ const graphql = (query, variables = {}) =>
 		}
 		const json = await response.json();
 		if (json.errors) {
-			logAndThrowError(json);
+			logAndThrowError(999, extractErrorMessageFromJson(json), { query });
 		}
 		return json;
 	});
@@ -79,10 +74,14 @@ const updateSystemRepository = async (systemCode, gitRepositoryName) => {
 		options,
 	);
 	if (!response.ok) {
-		await logAndThrowError(response, {
-			systemCode,
-			method: `updateRelationships`,
-		});
+		logAndThrowError(
+			response.status,
+			await extractErrorMessageFromResponse(response),
+			{
+				systemCode,
+				method: `updateRelationships`,
+			},
+		);
 	}
 
 	return response.json();
@@ -102,9 +101,9 @@ const systemHeadRequest = async code => {
 		options,
 	);
 	if (!response.ok) {
-		await logAndThrowError(response, {
+		logAndThrowError(response.status, response.headers.get('debug-error'), {
 			code,
-			method: 'read',
+			method: 'head',
 		});
 	}
 };
