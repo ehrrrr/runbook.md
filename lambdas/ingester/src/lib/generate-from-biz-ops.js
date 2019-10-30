@@ -2,19 +2,7 @@ const schema = require('@financial-times/biz-ops-schema');
 const { graphql } = require('./biz-ops-client');
 const runbookMd = require('../../../../libraries/parser');
 
-const isForbiddenType = prop =>
-	['DateTime', 'Date', 'Time'].includes(prop.type);
-
-const getValidProperties = type => {
-	return Object.entries(
-		schema.getType(type, {
-			includeMetaFields: false,
-		}).properties,
-	)
-		.filter(([, property]) => !isForbiddenType(property))
-		.map(([name]) => name)
-		.join('\n');
-};
+const isForbiddenType = type => ['DateTime', 'Date', 'Time'].includes(type);
 
 const desirableFields = [
 	'primaryURL',
@@ -65,6 +53,7 @@ exports.generate = async systemCode => {
 				})),
 			),
 		)
+		.filter(({ type }) => !isForbiddenType(type))
 		.filter(({ name }) => desirableFields.includes(name))
 		.filter(
 			({ name, deprecationReason }) =>
