@@ -106,7 +106,7 @@ class RunbookSource {
 					splunkQuery,
 				)}).
 				
-				Need help? Slack us in [#runbooks-in-repos](https://financialtimes.slack.com/messages/CFR0GPCAH)
+				Need help? Slack us in [#reliability-eng](https://financialtimes.slack.com/archives/C07B3043U)
 
 				Please check [your most recent production runbook](https://runbooks.in.ft.com/${systemCode}) and alert Operations if any critical details are missing.
 

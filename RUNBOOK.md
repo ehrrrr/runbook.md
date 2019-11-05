@@ -38,7 +38,7 @@ Check runbook.md logs on [Splunk](https://financialtimes.splunkcloud.com/en-US/a
 ## More Information
 
 Runbook.md is a toolchain used for improving the quality of runbooks across the business, and ensuring consistency of the information contained within runbooks with biz-ops – the knowledge base which models our business operations.
-Contact [#runbooks-in-repos](https://financialtimes.slack.com/messages/CFR0GPCAH) on Slack for more information.
+Contact [#reliability-eng](https://financialtimes.slack.com/archives/C07B3043U) on Slack for more information.
 
 ## Monitoring
 
