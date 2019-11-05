@@ -13,7 +13,7 @@ All systems which integrate with [Change API](https://github.com/Financial-Times
 Please add Change API to your deployment pipeline and release your code.
 A successful journey will see any `runbook.md` file changes automatically applied in Biz Ops to the relevant system(s).
 
-Here is the workflow: ![workflow](./docs/changeApi_runbooks.md_workflow.png)
+Here is the workflow: ![workflow](./docs/changeApiRunbookMdWorkflow.png)
 
 ### GitHub app (beta)
 

@@ -5,3 +5,4 @@ dist/
 .serverless/
 .DS_Store
 .stylelintcache
+.idea/
