@@ -34,6 +34,7 @@ const filterValidKinesisRecord = childLogger => (record = {}) => {
 const createGithubAPIClient = (log = logger) => async (
 	path,
 	{ previewMode, ...options } = {},
+	silentMode = false,
 ) => {
 	const url = `${githubApiUrl}${path.replace(githubApiUrl, '')}`;
 	const requestOptions = {
@@ -54,12 +55,14 @@ const createGithubAPIClient = (log = logger) => async (
 
 	if (!response.ok) {
 		requestOptions.headers.Authorization = `token: <redacted>`;
-		log.error({
-			event: 'GITHUB_API_FAILURE',
-			url,
-			requestOptions,
-			statusCode: response.status,
-		});
+		if (!silentMode) {
+			log.error({
+				event: 'GITHUB_API_FAILURE',
+				url,
+				requestOptions,
+				statusCode: response.status,
+			});
+		}
 		throw new Error(
 			`Github API call returned status code ${response.status}`,
 		);
@@ -126,7 +129,7 @@ class RunbookSource {
 		let systemCodeMap;
 
 		try {
-			const { content } = await this.githubAPI(path);
+			const { content } = await this.githubAPI(path, {}, true);
 			const { runbooks = {} } =
 				yaml.safeLoad(decodeBase64(content)) || {};
 			systemCodeMap = runbooks.systemCodes;
@@ -212,9 +215,10 @@ const fetchRunbook = async (
 		commit,
 		systemCode,
 		gitRepositoryName,
-		githubData: { htmlUrl: gitRefUrl },
-		user: { githubName },
+		githubData: { htmlUrl: gitRefUrl } = {},
+		user: { githubName } = {},
 		eventID,
+		traceId,
 	},
 	loggerInstance,
 ) => {
@@ -224,6 +228,7 @@ const fetchRunbook = async (
 		githubName,
 		gitRefUrl,
 		eventID,
+		traceId,
 	});
 
 	childLogger.info({
