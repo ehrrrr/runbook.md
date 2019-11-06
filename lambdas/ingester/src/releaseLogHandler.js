@@ -21,8 +21,8 @@ const filterValidKinesisRecord = childLogger => (record = {}) => {
 	});
 
 	if (!commit) {
-		log.error(
-			{ event: 'INSUFFICIENT_DATA', record },
+		log.info(
+			{ event: 'BAIL_INSUFFICIENT_DATA', record },
 			'Record did not contain commit',
 		);
 		return false;
@@ -278,7 +278,7 @@ const fetchRunbook = async (
 
 		if (!prNumber) {
 			childLogger.info({
-				event: 'GETTING_RUNBOOK_FROM_COMMIT',
+				event: 'GETTING_RUNBOOKS_FROM_COMMIT',
 			});
 			runbookChanges = await runbookSource.getRunbooksFromCommit(
 				commit,
@@ -286,7 +286,7 @@ const fetchRunbook = async (
 			);
 		} else {
 			childLogger.info({
-				event: 'GETTING_RUNBOOK_FROM_PR',
+				event: 'GETTING_RUNBOOKS_FROM_PR',
 				prNumber,
 			});
 			runbookChanges = await runbookSource.getRunbooksFromPR(
@@ -297,11 +297,12 @@ const fetchRunbook = async (
 		}
 
 		if (!runbookChanges.length) {
-			throw new Error('Bailing: No runbook found in commit tree');
+			throw new Error('Bailing: No runbooks found in commit tree');
 		}
 
 		childLogger.info({
-			event: 'GOT_RUNBOOK_CONTENT',
+			event: 'GOT_RUNBOOKS_CONTENT',
+			runbooks: runbookChanges.map(({ filename }) => filename),
 		});
 
 		const configuredSystemCodes = await runbookSource.getSystemCodeFromRepositoryConfig(
@@ -322,8 +323,8 @@ const fetchRunbook = async (
 			),
 		}));
 	} catch (error) {
-		childLogger.error({
-			event: 'GETTING_RUNBOOK_FAILED',
+		childLogger.warn({
+			event: 'BAIL_NO_RUNBOOKS',
 			error,
 		});
 
@@ -372,7 +373,7 @@ const ingestRunbook = async (
 			message,
 		});
 
-		return { ...result };
+		return result;
 	} catch (error) {
 		childLogger.error({
 			event: 'RUNBOOK_INGEST_FAILED',
@@ -417,14 +418,11 @@ const processRunbookMd = async (parsedRecords, parentLogger, awsRequestId) => {
 			childLogger,
 		);
 
-		const decorateError = message => {
-			const e = new Error(message);
-			e.awsRequestId = awsRequestId;
-			throw e;
-		};
-
 		if (!runbookInstances.length) {
-			decorateError('Bailing, could not fetch any runbooks.');
+			return json(200, {
+				message: 'No runbooks to ingest.',
+				eventIDs,
+			});
 		}
 
 		// this also does not reject or throw, instead it will return an empty array
@@ -436,7 +434,7 @@ const processRunbookMd = async (parsedRecords, parentLogger, awsRequestId) => {
 		);
 
 		if (!ingestedRunbooks.length) {
-			decorateError('Bailing, could not ingest any runbooks.');
+			throw new Error('Bailing, could not ingest any runbooks.');
 		}
 
 		return json(200, {
