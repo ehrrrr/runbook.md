@@ -15,20 +15,26 @@ const bizOpsApiKey = process.env.BIZ_OPS_API_KEY;
 const runbooksConfigurationCaches = {};
 
 const filterValidKinesisRecord = childLogger => (record = {}) => {
-	const { commit, eventID } = record;
+	const {
+		commit,
+		eventID,
+		loggerContext: { traceId } = {},
+		isProdEnv,
+	} = record;
 	const log = childLogger.child({
 		eventID,
+		traceId,
 	});
 
 	if (!commit) {
 		log.info(
-			{ event: 'BAIL_INSUFFICIENT_DATA', record },
+			{ event: 'BAIL_INSUFFICIENT_DATA' },
 			'Record did not contain commit',
 		);
 		return false;
 	}
 
-	return !!record.isProdEnv;
+	return !!isProdEnv;
 };
 
 const createGithubAPIClient = (log = logger) => async (
@@ -181,10 +187,11 @@ class RunbookSource {
 		return prNumber;
 	}
 
-	async getRunbooksFromPR(commit, gitRepositoryName, prNumber) {
-		const runbookFiles =
-			prNumber &&
-			(await this.getRunbookIfModified(prNumber, gitRepositoryName));
+	async getRunbooksFromPR(gitRepositoryName, prNumber) {
+		const runbookFiles = await this.getRunbookIfModified(
+			prNumber,
+			gitRepositoryName,
+		);
 
 		return Promise.all(
 			runbookFiles.map(async ({ runbookContentUrl, filename }) => ({
@@ -218,7 +225,7 @@ const fetchRunbook = async (
 		githubData: { htmlUrl: gitRefUrl } = {},
 		user: { githubName } = {},
 		eventID,
-		traceId,
+		loggerContext: { traceId } = {},
 	},
 	loggerInstance,
 ) => {
@@ -262,6 +269,10 @@ const fetchRunbook = async (
 			repository = repoName;
 		}
 
+		if (!/financial-times\//i.test(repository)) {
+			repository = `Financial-Times/${repository}`;
+		}
+
 		let prNumber;
 
 		// if provided, gitRefUrl can tell us whether we should
@@ -295,7 +306,6 @@ const fetchRunbook = async (
 				prNumber,
 			});
 			runbookChanges = await runbookSource.getRunbooksFromPR(
-				commit,
 				repository,
 				prNumber,
 			);
@@ -405,16 +415,14 @@ const ingestRunbooks = async (runbookInstances, awsRequestId) => {
 	return runbooksIngested.filter(runbook => !!runbook);
 };
 
-const getRecordIDs = records => records.map(({ eventID }) => eventID);
-
 const processRunbookMd = async (parsedRecords, parentLogger, awsRequestId) => {
-	const eventIDs = getRecordIDs(parsedRecords);
+	const eventIDs = parsedRecords.map(({ eventID }) => eventID);
 	const childLogger = parentLogger.child({ eventIDs });
 
 	try {
 		// this does not reject or throw, instead it will return an empty array
 		// if no fetches were successful
-		// all errors are handled within, including posting of github issues
+		// this will not post github issues on error
 		const runbookInstances = await fetchRunbooks(
 			parsedRecords,
 			childLogger,
@@ -458,7 +466,6 @@ const processRunbookMd = async (parsedRecords, parentLogger, awsRequestId) => {
 };
 
 const handler = ({ Records }, { awsRequestId }) => {
-	const eventIDs = getRecordIDs(Records);
 	const childLogger = logger.child({ awsRequestId });
 
 	childLogger.info({
@@ -478,7 +485,6 @@ const handler = ({ Records }, { awsRequestId }) => {
 		);
 		return json(200, {
 			message: 'Nothing to ingest',
-			eventIDs,
 		});
 	}
 
