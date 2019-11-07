@@ -343,10 +343,7 @@ const fetchRunbooks = async (parsedRecords, childLogger) => {
 	);
 
 	// Flatten found runbooks
-	return runbooksFetched.reduce(
-		(runbooks, next = []) => [...runbooks, ...next],
-		[],
-	);
+	return [].concat(...runbooksFetched.filter(runbook => !!runbook));
 };
 
 const ingestRunbook = async (
