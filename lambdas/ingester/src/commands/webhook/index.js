@@ -1,11 +1,12 @@
 const { RunbookMdApp } = require('./runbook-md-app');
-
+const schema = require('../../lib/get-configured-schema');
 // 1. Listen to check_suite.requested & check_run.rerequested events
 // 2. Ingest *RUNBOOK.MD files from tree
 // 3. Store results
 // 4. Create a check run
 // 5. Post commit status
 exports.command = async context => {
+	await schema.refresh();
 	const config = await context.config('runbooks.yml', {});
 	const app = new RunbookMdApp(context, config.runbooks);
 	await app.gatherRunbooks(context);
