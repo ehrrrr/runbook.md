@@ -5,43 +5,68 @@ const dynamodb = new AWS.DynamoDB({
 	region: 'eu-west-1',
 });
 
-const put = (repository, commitHash, result) =>
-	dynamodb
-		.putItem({
-			Item: {
-				CommitHash: {
-					S: commitHash,
-				},
-				Repository: {
-					S: repository,
-				},
+const TABLE_NAME = 'biz-ops-runbook-md.results';
+
+const recordPayload = (repository, commitSha, result) => ({
+	CommitHash: {
+		S: commitSha,
+	},
+	Repository: {
+		S: repository,
+	},
+	...(result
+		? {
 				ResultJson: {
 					S: JSON.stringify(result),
 				},
-			},
-			ReturnConsumedCapacity: 'TOTAL',
-			TableName: 'biz-ops-runbook-md.results',
+		  }
+		: {}),
+});
+
+const put = (repository, commitSha, result) =>
+	dynamodb
+		.putItem({
+			Item: recordPayload(repository, commitSha, result),
+			TableName: TABLE_NAME,
 		})
 		.promise();
 
-const get = (repository, commitHash) =>
+const get = (repository, commitSha) =>
 	dynamodb
 		.getItem({
-			Key: {
-				CommitHash: {
-					S: commitHash,
-				},
-				Repository: {
-					S: repository,
-				},
-			},
-			ReturnConsumedCapacity: 'TOTAL',
-			TableName: 'biz-ops-runbook-md.results',
+			Key: recordPayload(repository, commitSha),
+			TableName: TABLE_NAME,
+			ProjectionExpression: 'ResultJson',
 		})
 		.promise()
-		.then(({ Item: { ResultJson: { S: result } } }) => JSON.parse(result));
+		.then(({ Item: { ResultJson: { S: result } = {} } = {} }) =>
+			JSON.parse(result),
+		);
+
+const batchGet = (repository, hashArray) =>
+	dynamodb
+		.batchGetItem({
+			RequestItems: {
+				[TABLE_NAME]: {
+					Keys: hashArray.map(hash => ({
+						Repository: {
+							S: repository,
+						},
+						CommitHash: {
+							S: hash,
+						},
+					})),
+					ProjectionExpression: 'ResultJson',
+				},
+			},
+		})
+		.promise()
+		.then(({ Responses: { [TABLE_NAME]: items } = {} }) =>
+			items.map(({ ResultJson: { S: result } }) => JSON.parse(result)),
+		);
 
 module.exports = {
 	put,
 	get,
+	batchGet,
 };

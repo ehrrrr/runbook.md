@@ -41,9 +41,9 @@ const formOutputHandler = async event => {
 		Object.assign(responseProperties, ingestJson);
 	} catch (error) {
 		Object.assign(responseProperties, { status: 400, ...error });
-		logger.info({
+		logger.error({
 			event: 'MANUAL_RUNBOOK_CHECK_FAILED',
-			error: { ...error },
+			error,
 		});
 	}
 

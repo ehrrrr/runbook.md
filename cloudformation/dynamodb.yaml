@@ -22,4 +22,4 @@ Resources:
         WriteCapacityUnits: "1"
       SSESpecification:
         SSEEnabled: true
-      TableName: "biz-ops-runbook-md.results"
+      TableName: "biz-ops-runbook-md.ingest-results"

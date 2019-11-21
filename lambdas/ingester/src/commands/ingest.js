@@ -1,100 +1,61 @@
 const stripHtmlComments = require('strip-html-comments');
-const runbookMd = require('../lib/parser');
+const RunbookMd = require('../lib/parser');
 const { validate, updateBizOps } = require('../lib/external-apis');
-const {
-	updateSystemRepository,
-	systemHeadRequest,
-} = require('../lib/biz-ops-client');
-const { transformCodesIntoNestedData } = require('../lib/code-validation');
-const setActualLineNumber = require('../lib/set-actual-line-number');
+const { updateSystemRepository } = require('../lib/biz-ops-client');
+const { setActualLineNumber } = require('./ingest/set-actual-line-number');
+const { transformCodesIntoNestedData } = require('./ingest/code-validation');
+const { transformSOSResult } = require('./ingest/details');
+const { ingestError } = require('./ingest/errors');
+const { checkSystemCodeExists } = require('./ingest/system-code-check');
 
-const transformIngestedDetails = (
-	parseResult,
-	validationResult,
-	writeResult,
-	updateSystemRepositoryResult,
-) => ({
-	...(parseResult && {
-		parseErrors: parseResult.errors,
-		parseData: parseResult.data,
-	}),
-	...(validationResult && {
-		validationErrors: validationResult.errorMessages,
-		validationData: validationResult.percentages,
-		weightedScore: Number(validationResult.weightedScore).toFixed(1),
-	}),
-	...(writeResult && { updatedFields: writeResult }),
-	...(updateSystemRepositoryResult && {
-		updadatedRepository: updateSystemRepositoryResult,
-	}),
-});
-
-const decorateError = props => {
-	const error = new Error();
-	Object.assign(error, { ...props });
-	return error;
-};
-
-const checkSystemCodeExists = async (systemCode, details) => {
-	try {
-		await systemHeadRequest(systemCode);
-	} catch (e) {
-		let message;
-		let code;
-		if (e.status === 404) {
-			message = 'Biz-Ops update skipped: system code not found.';
-			code = 'parse-ok-system-code-not-found';
-		} else {
-			message = `Parse & validation complete. Biz-Ops update skipped. Error from Biz-Ops: ${e.message}.`;
-			code = 'parse-ok-biz-ops-api-error';
-		}
-		throw decorateError({ message, code, details });
+const parseAndValidate = async rawRunbook => {
+	if (!rawRunbook) {
+		throw ingestError('no-content');
 	}
+
+	// 1. parse RUNBOOK.MD to JSON
+	// the parser doesn't support comments
+	const content = stripHtmlComments(rawRunbook);
+	// returns { data, errors }
+	const {
+		data: parseData,
+		errors: parseErrors,
+	} = await RunbookMd.parseRunbookString(content);
+	// comments are stripped, so adjust the line count
+	if (parseErrors) {
+		setActualLineNumber(rawRunbook, content, parseErrors);
+	}
+
+	// 2. validate codes in JSON against the Biz Ops schema
+	// returns { expandedData, errors }
+	const {
+		expandedData,
+		errors: structuralErrors,
+	} = await transformCodesIntoNestedData(parseData);
+
+	parseErrors.push(...structuralErrors);
+
+	const details = { parseData, parseErrors };
+	if (parseErrors.length) {
+		throw ingestError('parse-error', { details });
+	}
+
+	// 3. validate against SOS rules
+	const { json: sosResponse } = await validate(expandedData);
+	Object.assign(details, transformSOSResult(sosResponse));
+	return details;
 };
 
 const ingest = async payload => {
 	const {
-		content: rawRunbook,
+		content,
 		shouldWriteToBizOps,
 		bizOpsApiKey,
 		repository,
+		details = await parseAndValidate(content),
 	} = payload;
 
-	if (!rawRunbook) {
-		throw decorateError({
-			message: 'Runbook contents not supplied.',
-			code: 'no-content',
-		});
-	}
-
-	const content = stripHtmlComments(rawRunbook);
-	// parse RUNBOOK.MD to JSON to return {data, errors}
-	const parseResult = await runbookMd.parseRunbookString(content);
-	if (parseResult && parseResult.errors) {
-		setActualLineNumber(rawRunbook, content, parseResult.errors);
-	}
-	// validate codes in JSON against the Biz Ops to return {expandedData, errors}
-	const expandedResult = await transformCodesIntoNestedData(parseResult.data);
-
-	parseResult.errors.push(...expandedResult.errors);
-	if (parseResult.errors.length) {
-		throw decorateError({
-			message: 'Failed to parse runbook.',
-			code: 'parse-error',
-			details: transformIngestedDetails(parseResult),
-		});
-	}
-
-	// validate against SOS ruleset
-	const { json: validationResult } = await validate(
-		expandedResult.expandedData,
-	);
-
-	const details = transformIngestedDetails(parseResult, validationResult);
-
-	const systemCode =
-		(details.parseData && details.parseData.code) || payload.systemCode;
-
+	// 1. if we don't need to update Biz-Ops, we are done
 	if (!shouldWriteToBizOps || shouldWriteToBizOps === 'no') {
 		return {
 			message: 'Parse & validation complete. Biz-Ops update skipped.',
@@ -103,43 +64,40 @@ const ingest = async payload => {
 		};
 	}
 
-	// we don't need systemCode until this point
+	// 2. check if the runbook specifies a system code
+	const systemCode = details.parseData.code || payload.systemCode;
+	// from this point on, we'll need a system code
 	if (!systemCode) {
-		throw decorateError({
-			message:
-				'Parse & validation complete. Biz-Ops update skipped (no system code supplied).',
-			code: 'parse-ok-systemCode-missing',
+		throw ingestError('parse-ok-systemCode-missing', {
 			details,
 		});
 	}
-
+	// and a valid API key for Biz-Ops
 	if (!bizOpsApiKey) {
-		throw decorateError({
-			message:
-				'Parse & validation complete. Biz-Ops update skipped (no API key supplied).',
-			code: 'parse-ok-apiKey-missing',
+		throw ingestError('parse-ok-apiKey-missing', {
 			details,
 		});
 	}
 
-	// avoid to create non-existing system in BizOps
+	// 3. check if the system code exists in Biz-Ops
+	// to avoid creating new systems
 	await checkSystemCodeExists(systemCode, details);
 
-	const { status, json: response } = await updateBizOps(
+	// 4. update Biz-Ops
+	const { status, json: writeResult } = await updateBizOps(
 		bizOpsApiKey,
 		systemCode,
-		parseResult.data,
+		details.parseData,
 	);
 	if (status !== 200) {
-		throw decorateError({
-			status,
-			message: `Parse & validation complete. Biz-Ops update failed (status ${status}).`,
-			code: 'parse-ok-update-error',
-			response,
+		throw ingestError('parse-ok-update-error', {
 			details,
+			writeResult,
+			status,
 		});
 	}
 
+	// 5. update the system's repository in Biz-Ops
 	let updateSystemRepositoryResult;
 	try {
 		updateSystemRepositoryResult = await updateSystemRepository(
@@ -147,27 +105,20 @@ const ingest = async payload => {
 			repository,
 		);
 	} catch (error) {
-		throw decorateError({
-			message: `Parse & validation complete. Biz-Ops update repository failed`,
-			code: 'parse-ok-update-repository-error',
-			updateSystemRepositoryResult,
+		throw ingestError('parse-ok-update-repository-error', {
 			details,
+			error,
 		});
 	}
+
+	Object.assign(details, { writeResult, updateSystemRepositoryResult });
 
 	return {
 		status,
 		message: `Parse & validation complete. Biz-Ops update successful.`,
 		code: 'parse-ok-update-ok',
-		details: transformIngestedDetails(
-			parseResult,
-			validationResult,
-			response,
-			updateSystemRepositoryResult,
-		),
+		details,
 	};
 };
 
-module.exports = {
-	ingest,
-};
+module.exports = { ingest };

@@ -17,4 +17,4 @@ const setActualLineNumber = (content, contentWithoutComments, parseErrors) => {
 	});
 };
 
-module.exports = setActualLineNumber;
+module.exports = { setActualLineNumber };

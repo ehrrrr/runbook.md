@@ -1,5 +1,5 @@
-const schema = require('./get-configured-schema');
-const { queryBizOps } = require('./external-apis');
+const schema = require('../../lib/get-configured-schema');
+const { queryBizOps } = require('../../lib/external-apis');
 
 const relatedBizOpsFields = {
 	Group: ['name', 'isActive'].join(),

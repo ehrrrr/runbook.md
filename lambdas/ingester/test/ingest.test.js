@@ -1,10 +1,10 @@
 jest.mock('../src/lib/external-apis');
-jest.mock('../src/lib/code-validation');
+jest.mock('../src/commands/ingest/code-validation');
 jest.mock('../src/lib/biz-ops-client');
 
 const runbookMd = require('../src/lib/parser');
 const externalApis = require('../src/lib/external-apis');
-const bizOpsValidation = require('../src/lib/code-validation');
+const bizOpsValidation = require('../src/commands/ingest/code-validation');
 const bizOpsClient = require('../src/lib/biz-ops-client');
 
 const { ingest } = require('../src/commands/ingest');

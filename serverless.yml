@@ -107,14 +107,14 @@ functions:
       - http:
           path: /runbook.md
           method: post
-  releaseLog:
-    description: Apply runbook.md changes on prod release
-    handler: lambdas/ingester/src/releaseLogHandler.handler
+  release:
+    description: Apply runbook.md changes on prod release (probot app)
+    handler: lambdas/ingester/src/releaseHandler.handler
     timeout: 30
     events:
       - stream:
           type: kinesis
-          batchSize: 100
+          batchSize: 1
           arn: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-${env:ENVIRONMENT}-enriched-stream
           startingPosition: TRIM_HORIZON
           enabled: true

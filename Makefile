@@ -90,6 +90,12 @@ emulate-local-kinesis-stream:
 
 run-local-message-stream: run-local-stream-container emulate-local-kinesis-stream
 
+test-local-message-stream: 
+	aws kinesis --endpoint-url http://localhost:4567 \
+		put-record --stream-name change-request-api-test-enriched-stream \
+		--partition-key “MyFirstMessage” \
+		--data "{\"githubData\":{\"htmlUrl\":\"https://github.com/Financial-Times/runbook.md/pull/182\"},\"user\":{\"githubName\":\"doramatadora\"},\"systemCode\":\"biz-ops-runbook-md\",\"commit\":\"96dc994247c0bbac85de0ff9ed7b5d0919ac68c0\",\"loggerContext\":{\"traceId\":\"HASH_HERE\"},\"isProdEnv\":true}"
+
 run: clean run-local-message-stream run-web
 
 run-web:
@@ -101,9 +107,9 @@ move-asset-manifest:
 create-database:
 	aws cloudformation create-stack \
 	--region eu-west-1 \
-	--stack-name biz-ops-runbooks-md-data \
+	--stack-name biz-ops-runbook-md-data \
 	--template-body file://$$(pwd)/cloudformation/dynamodb.yaml \
-	--tags Key=description,Value="Data store for pull request evaulations of runbook.md files in repos" \
-	Key=systemCode,Value=yakfly \
+	--tags Key=description,Value="Data store for pull request evaluations of runbook.md files in repos" \
+	Key=systemCode,Value=biz-ops-runbook-md \
 	Key=environment,Value=$$ENVIRONMENT_TAG \
 	Key=teamDL,Value=reliability.engineering@ft.com

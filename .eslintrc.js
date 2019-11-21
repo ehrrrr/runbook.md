@@ -15,9 +15,7 @@ module.exports = {
 	overrides: [
 		{
 			files: ['**/*.test.js'],
-			env: {
-				jest: true,
-			},
+			env: { jest: true },
 			rules: {
 				'unicorn/consistent-function-scoping': [0],
 			},

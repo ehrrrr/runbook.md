@@ -1,0 +1,11 @@
+{
+	"no-content": "Runbook contents not supplied.",
+	"parse-error": "Failed to parse runbook.",
+	"parse-ok-update-skipped": "Validation complete. Biz-Ops update skipped.",
+	"parse-ok-systemCode-missing": "Validation complete. Biz-Ops update skipped (no system code supplied).",
+	"parse-ok-apiKey-missing": "Validation complete. Biz-Ops update skipped (no API key supplied).",
+	"parse-ok-update-error": "Validation complete. Biz-Ops update failed.",
+	"parse-ok-update-repository-error": "Validation complete. Biz-Ops update repository failed.",
+	"parse-ok-update-ok": "Validation complete. Biz-Ops update successful.",
+	"parse-ok-system-code-not-found": "Biz-Ops update skipped: System code not found."
+}
