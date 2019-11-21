@@ -54,7 +54,11 @@ exports.generate = async systemCode => {
 			),
 		)
 		.filter(({ type }) => !isForbiddenType(type))
-		.filter(({ name }) => desirableFields.includes(name))
+		.filter(({ name }) =>
+			[...systemSchema.minimumViableRecord]
+				.concat(desirableFields)
+				.includes(name),
+		)
 		.filter(
 			({ name, deprecationReason }) =>
 				!deprecationReason && !excludedProperties.includes(name),
