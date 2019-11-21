@@ -2,7 +2,7 @@
 
 runbook.md is a toolchain for improving the quality of runbooks across the business, and ensuring consistency of the information contained within runbooks with [biz-ops](https://biz-ops.in.ft.com/) – the knowledge base which models our business operations.
 
-Talk to us in [#reliability-eng](https://financialtimes.slack.com/archives/C07B3043U) on Slack if you have any questions / suggestions.
+Talk to us in the [#reliability-eng](https://financialtimes.slack.com/archives/C07B3043U) channel on Slack if you have any questions / suggestions.
 
 ## Toolchain
 
