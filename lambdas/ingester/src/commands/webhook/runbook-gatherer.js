@@ -9,9 +9,13 @@ class RunbookGatherer extends RunbookProcessor {
 		// process each runbook in the tree
 		// filtering out zero-length files
 		// and ingest errors
-		const runbooks = (await Promise.all(
-			this.runbooks.map(runbook => this.processRunbook(context, runbook)),
-		)).filter(runbook => !!runbook);
+		const runbooks = (
+			await Promise.all(
+				this.runbooks.map(runbook =>
+					this.processRunbook(context, runbook),
+				),
+			)
+		).filter(runbook => !!runbook);
 
 		// bail if we have nothing to work with
 		if (!isArrayNotEmpty(runbooks)) {
@@ -25,9 +29,11 @@ class RunbookGatherer extends RunbookProcessor {
 	// TODO: batch writes for performance
 	// https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/dynamodb-example-table-read-write-batch.html
 	async storeResults() {
-		const errors = (await Promise.all(
-			this.runbooks.map(runbook => this.storeIngestResult(runbook)),
-		)).filter(savedSuccessfully => !savedSuccessfully);
+		const errors = (
+			await Promise.all(
+				this.runbooks.map(runbook => this.storeIngestResult(runbook)),
+			)
+		).filter(savedSuccessfully => !savedSuccessfully);
 
 		if (errors.length === this.runbooks.length) {
 			return this.bail('Failed to store ingest results');
