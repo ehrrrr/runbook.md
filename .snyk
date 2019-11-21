@@ -20,4 +20,12 @@ ignore:
     - probot > hbs > handlebars:
         reason: No upgrade available
         expires: '2019-12-06T17:18:36.040Z'
+  SNYK-JS-HANDLEBARS-534478:
+    - probot > hbs > handlebars:
+        reason: No fix
+        expires: '2019-12-21T14:39:08.493Z'
+  SNYK-JS-HANDLEBARS-534988:
+    - probot > hbs > handlebars:
+        reason: No fix
+        expires: '2019-12-21T14:39:08.493Z'
 patch: {}

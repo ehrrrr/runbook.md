@@ -48,7 +48,10 @@ const getTypesAndCodesFromRelationships = (systemSchema, data) =>
 			if (typeof value === 'string') {
 				pushUnique(accumulator, [{ type, code: value }]);
 			} else {
-				pushUnique(accumulator, value.map(code => ({ type, code })));
+				pushUnique(
+					accumulator,
+					value.map(code => ({ type, code })),
+				);
 			}
 		}
 		return accumulator;
