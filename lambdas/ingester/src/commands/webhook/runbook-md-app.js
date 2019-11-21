@@ -1,7 +1,7 @@
 const { IngestSummariser } = require('./ingest-summariser');
 const { put: storeResult } = require('../../lib/dynamodb-client');
 
-const { BIZ_OPS_URL, ENVIRONMENT } = process.env;
+const { BIZ_OPS_URL, NODE_ENV } = process.env;
 
 // CLASS HIERARCHY
 //
@@ -34,9 +34,9 @@ class RunbookMdApp extends IngestSummariser {
 			} = await context.github.checks.create(
 				context.repo({
 					name:
-						ENVIRONMENT === 'test'
-							? 'Runbook.md Staging'
-							: 'Runbook Validator',
+						NODE_ENV === 'production'
+							? 'Runbook Validator'
+							: 'Runbook.md Staging',
 					head_sha: this.sha,
 					details_url: `${BIZ_OPS_URL}/runbook.md/about`,
 					status: 'completed',
