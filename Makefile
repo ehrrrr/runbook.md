@@ -90,6 +90,9 @@ emulate-local-kinesis-stream:
 
 run-local-message-stream: run-local-stream-container emulate-local-kinesis-stream
 
+delete-local-stream:
+	aws kinesis delete-stream --stream-name change-request-api-test-enriched-stream
+
 send-message-to-local-stream: 
 	aws kinesis --endpoint-url http://localhost:4567 \
 	put-record --stream-name change-request-api-test-enriched-stream \
