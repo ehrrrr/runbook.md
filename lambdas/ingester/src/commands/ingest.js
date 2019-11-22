@@ -105,12 +105,10 @@ const ingest = async payload => {
 			repository,
 		);
 	} catch (error) {
+		// don't throw, just assign the error to a response property
 		updateSystemRepositoryResult = ingestError(
 			'parse-ok-update-repository-error',
-			{
-				details,
-				error,
-			},
+			{ error },
 		);
 	}
 
