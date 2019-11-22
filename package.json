@@ -1,8 +1,8 @@
 {
 		"private": true,
-		"name": "runbooks.md",
+		"name": "runbook.md",
 		"version": "1.0.0",
-		"description": "Automated import of *runbook.md",
+		"description": "Automated import of *runbook.m",
 		"main": "index.js",
 		"repository": {
 				"type": "git",
