@@ -3,7 +3,7 @@ const lambdaLogger = require('@financial-times/lambda-logger');
 const httpError = require('http-errors');
 const nodeFetch = require('isomorphic-fetch');
 
-const keepAliveAgent = new https.Agent({ keepAlive: true });
+const agent = new https.Agent({ keepAlive: true });
 
 const { BIZ_OPS_API_URL, SOS_URL } = process.env;
 
@@ -19,7 +19,7 @@ const callExternalApi = async ({
 		method,
 		body: JSON.stringify(payload),
 		headers,
-		agent: keepAliveAgent,
+		agent,
 		timeout: 2000,
 	};
 	const event = `${name}_${method}`;
