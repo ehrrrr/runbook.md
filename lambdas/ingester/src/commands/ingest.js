@@ -5,7 +5,7 @@ const { updateSystemRepository } = require('../lib/biz-ops-client');
 const { setActualLineNumber } = require('./ingest/set-actual-line-number');
 const { transformCodesIntoNestedData } = require('./ingest/code-validation');
 const { transformSOSResult } = require('./ingest/details');
-const { ingestError } = require('./ingest/errors');
+const { ingestError, errorMessages } = require('./ingest/errors');
 const { checkSystemCodeExists } = require('./ingest/system-code-check');
 
 const parseAndValidate = async rawRunbook => {
@@ -48,11 +48,10 @@ const parseAndValidate = async rawRunbook => {
 
 const ingest = async payload => {
 	const {
-		content,
 		shouldWriteToBizOps,
 		bizOpsApiKey,
 		repository,
-		details = await parseAndValidate(content),
+		details = await parseAndValidate(payload.content),
 	} = payload;
 
 	// 1. if we don't need to update Biz-Ops, we are done
@@ -98,6 +97,7 @@ const ingest = async payload => {
 	}
 
 	// 5. update the system's repository in Biz-Ops
+	// this shouldn't fail the ingest
 	let updateSystemRepositoryResult;
 	try {
 		updateSystemRepositoryResult = await updateSystemRepository(
@@ -105,10 +105,13 @@ const ingest = async payload => {
 			repository,
 		);
 	} catch (error) {
-		throw ingestError('parse-ok-update-repository-error', {
-			details,
+		// don't throw, just assign the error to a response property
+		const code = 'parse-ok-update-repository-error';
+		updateSystemRepositoryResult = {
+			code,
+			message: errorMessages[code],
 			error,
-		});
+		};
 	}
 
 	Object.assign(details, { writeResult, updateSystemRepositoryResult });

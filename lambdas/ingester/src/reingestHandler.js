@@ -2,16 +2,16 @@ const lambdaLogger = require('@financial-times/lambda-logger');
 const { get: getStoredResult } = require('./lib/dynamodb-client');
 const { json, renderPage } = require('./lib/response');
 const { createLambda } = require('./lib/lambda');
+const { ingestRunbook } = require('./releaseHandler');
+const template = require('./templates/reingest-page');
 
-const template = require('./templates/status-page');
-
-const statusPageHandler = async event => {
+const reingestHandler = async event => {
 	const { owner, repo, hash } = event.pathParameters;
 	const { commitSha } = event.queryStringParameters;
 	const repository = `${owner}/${repo}`;
 
 	const logger = lambdaLogger.child({
-		reporter: 'STATUS_PAGE',
+		reporter: 'REINGEST_PAGE',
 		repository,
 		runbookSha: hash,
 		commitSha,
@@ -33,16 +33,39 @@ const statusPageHandler = async event => {
 			event: 'RETRIEVED_STORED_RESULT',
 		});
 
+		if (storedResult.state !== 'success') {
+			logger.error({ event: 'RUNBOOK_INVALID' });
+			return json(403, {
+				message: 'Only valid runbooks can be reingested.',
+			});
+		}
+
 		const {
-			details: { validationErrors = [] } = {},
+			details,
+			systemCode,
 			commitSha: originalCommitSha,
 		} = storedResult;
 
-		const commitUrl = `https://github.com/${owner}/${repo}/commit/${originalCommitSha}`;
+		const { status, message } = await ingestRunbook(
+			{
+				systemCode,
+				repository,
+				details,
+				childLogger: logger,
+			},
+			{
+				event: 'REINGEST',
+				postGithubIssueOnError: false,
+				returnError: true,
+			},
+		);
 
+		Object.assign(storedResult, { status, message });
+
+		const commitUrl = `https://github.com/${owner}/${repo}/commit/${originalCommitSha}`;
 		const alertState =
 			storedResult.state === 'success' &&
-			Object.keys(validationErrors).length
+			Object.keys(details.validationErrors).length
 				? 'neutral'
 				: storedResult.state;
 
@@ -64,11 +87,12 @@ const statusPageHandler = async event => {
 			event: 'FAILED_FETCH_STORED_RESULT',
 			error,
 		});
+
 		return json(404, {
 			message:
-				'Failed to fetch stored validation result. This is probably our fault. Please make a fresh commit to force regeneration. If the problem persists, let us know in the #reliability-eng slack channel.',
+				'Failed to fetch stored validation result. Please make a fresh commit.',
 		});
 	}
 };
 
-exports.handler = createLambda(statusPageHandler);
+exports.handler = createLambda(reingestHandler);

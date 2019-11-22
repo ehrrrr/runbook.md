@@ -48,7 +48,10 @@ const fetchRunbooksByCommit = async (
 		// 1. make sure we have a repository; format owner/repositoryName
 		const repository = parseRepositoryName(gitRepositoryName, gitRefUrl);
 		// 2. make sure we have some runbooks saved in DynamoDb
-		const { runbookHashes } = await getStoredResult(repository, commit);
+		const { runbookHashes, checkRunUrl } = await getStoredResult(
+			repository,
+			commit,
+		);
 
 		if (!runbookHashes) {
 			throw new Error(
@@ -59,27 +62,15 @@ const fetchRunbooksByCommit = async (
 		// 3. retrieve ingest details
 		const runbooks = [];
 		for (const slice of chunk(runbookHashes, DYNAMODB_CONCURRENCY)) {
-			try {
-				const validRunbooks = (
-					await batchGet(repository, slice)
-				).filter(({ state }) => state === 'success');
-				runbooks.push(validRunbooks);
-				await sleep(THROTTLE_MILLISECONDS);
-			} catch (error) {
-				// post issue if we couldn't retrieve runbook ingest details from DynamoDb
-				await postIssue({
-					commit,
-					repository,
-					githubName,
-					errorCause: error.message,
-					recordSystemCode,
-					traceId,
-				});
-				throw error;
-			}
+			const validRunbooks = (await batchGet(repository, slice)).filter(
+				({ state }) => state === 'success',
+			);
+			runbooks.push(...validRunbooks);
+			await sleep(THROTTLE_MILLISECONDS);
 		}
 
 		return runbooks.map(({ details, systemCode }) => ({
+			checkRunUrl,
 			commit,
 			repository,
 			githubName,
@@ -106,15 +97,20 @@ const fetchAllRunbooks = async (parsedRecords, childLogger) => {
 	return [].concat(...runbooksFetched);
 };
 
-const ingestRunbook = async ({
-	commit,
-	systemCode,
-	repository,
-	githubName,
-	details,
-	childLogger,
-	traceId,
-}) => {
+const ingestRunbook = async (
+	{
+		systemCode,
+		repository,
+		details,
+		childLogger,
+		// the properties below are only used to post Github issue
+		commit,
+		githubName,
+		traceId,
+		checkRunUrl,
+	},
+	{ event = 'INGEST', postGithubIssueOnError = true, returnError = false },
+) => {
 	try {
 		const result = await ingest({
 			shouldWriteToBizOps: true,
@@ -127,7 +123,7 @@ const ingestRunbook = async ({
 		const { status, message } = result;
 
 		childLogger.info({
-			event: 'RUNBOOK_INGEST_SUCCESSFUL',
+			event: `RUNBOOK_${event}_SUCCESSFUL`,
 			status,
 			message,
 		});
@@ -135,20 +131,21 @@ const ingestRunbook = async ({
 		return result;
 	} catch (error) {
 		childLogger.error({
-			event: 'RUNBOOK_INGEST_FAILED',
+			event: `RUNBOOK_${event}_FAILED`,
 			error,
 		});
-
-		await postIssue({
-			commit,
-			repository,
-			githubName,
-			errorCause: error.message,
-			systemCode,
-			traceId,
-		});
-
-		return null;
+		if (postGithubIssueOnError) {
+			await postIssue({
+				checkRunUrl,
+				commit,
+				repository,
+				githubName,
+				errorCause: error.message,
+				systemCode,
+				traceId,
+			});
+		}
+		return returnError ? error : null;
 	}
 };
 
@@ -172,7 +169,6 @@ const processRunbookMd = async (parsedRecords, log) => {
 			parsedRecords,
 			childLogger,
 		);
-
 		if (!runbookInstances.length) {
 			return json(200, {
 				message: 'No runbooks to ingest.',
@@ -236,4 +232,5 @@ const handler = ({ Records }, { awsRequestId }) => {
 
 module.exports = {
 	handler: createLambda(handler, { requireS3o: false }),
+	ingestRunbook,
 };

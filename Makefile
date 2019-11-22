@@ -75,7 +75,7 @@ run-local-stream-container:
 	# see https://docs.docker.com/engine/reference/commandline/ps/
 	@if [ -z "$(shell docker ps -q -f name=^/localstreams$)" ]; then \
 		if [ "$(shell docker ps -aq -f status=exited -f name=^/localstreams$)" ]; then \
-				docker rm localstreams; \
+			docker rm localstreams; \
 		fi; \
 		docker run -d --name localstreams -p 4567:4567 instructure/kinesalite; \
 	fi;
@@ -85,16 +85,19 @@ emulate-local-kinesis-stream:
 	--endpoint-url=http://localhost:4567 kinesis list-streams \
 	| grep change-request-api-test-enriched-stream)" ]; then \
 		aws --region eu-west-1 --no-verify-ssl --endpoint-url=http://localhost:4567 kinesis \
-			create-stream --stream-name change-request-api-test-enriched-stream --shard-count 1; \
+		create-stream --stream-name change-request-api-test-enriched-stream --shard-count 1; \
 	fi
 
 run-local-message-stream: run-local-stream-container emulate-local-kinesis-stream
 
-test-local-message-stream: 
+delete-local-stream:
+	aws kinesis delete-stream --stream-name change-request-api-test-enriched-stream
+
+send-message-to-local-stream: 
 	aws kinesis --endpoint-url http://localhost:4567 \
-		put-record --stream-name change-request-api-test-enriched-stream \
-		--partition-key “MyFirstMessage” \
-		--data "{\"githubData\":{\"htmlUrl\":\"https://github.com/Financial-Times/runbook.md/pull/182\"},\"user\":{\"githubName\":\"doramatadora\"},\"systemCode\":\"biz-ops-runbook-md\",\"commit\":\"96dc994247c0bbac85de0ff9ed7b5d0919ac68c0\",\"loggerContext\":{\"traceId\":\"HASH_HERE\"},\"isProdEnv\":true}"
+	put-record --stream-name change-request-api-test-enriched-stream \
+	--partition-key “MyFirstMessage” \
+	--data "{\"githubData\":{\"htmlUrl\":\"https://github.com/Financial-Times/runbook.md/pull/182\"},\"user\":{\"githubName\":\"doramatadora\"},\"systemCode\":\"biz-ops-runbook-md\",\"commit\":\"2ef740c14c006521fca2dd51f65198f4900163ba\",\"loggerContext\":{\"traceId\":\"HASH_HERE\"},\"isProdEnv\":true}"
 
 run: clean run-local-message-stream run-web
 

@@ -1,5 +1,9 @@
 const { RunbookGatherer } = require('./runbook-gatherer');
-const { makePlural, numericValue } = require('../../lib/type-helpers');
+const {
+	makePlural,
+	numericValue,
+	isStringNotEmpty,
+} = require('../../lib/type-helpers');
 
 const bizOpsUrl = process.env.BIZ_OPS_URL;
 
@@ -86,6 +90,7 @@ class IngestSummariser extends RunbookGatherer {
 
 	summariseIngestResult({
 		sha,
+		systemCode,
 		path,
 		url,
 		state,
@@ -105,7 +110,8 @@ class IngestSummariser extends RunbookGatherer {
 			updated: Object.keys(updatedFields).length,
 		};
 		const { emoji, status } = this.getStateDescriptors(state);
-		const statusUrl = this.statusUrl(sha);
+		const statusUrl = this.runbookMdUrl(sha);
+		const reingestUrl = this.runbookMdUrl(sha, 'reingest');
 
 		return [
 			`## ${path}  \n`,
@@ -122,6 +128,12 @@ class IngestSummariser extends RunbookGatherer {
 			count.invalid && `* **${count.invalid}** invalid facets`,
 			// fields updated in Biz-Ops
 			count.updated && `* **${count.updated}** fields updated in Biz-Ops`,
+			// fields updated in Biz-Ops
+			state === 'success' &&
+				(isStringNotEmpty(systemCode)
+					? `[**Trigger ingest »**](${reingestUrl}) – :warning: this will update the system **${systemCode}** in Biz-Ops`
+					: // TODO: link to docs explaining system codes priority
+					  `**Ingest trigger disabled** – no system code found. Please specify a valid system code in this runbook's contents, filename, or in the repository config for runbook.md.`),
 		]
 			.filter(line => !!line)
 			.join('  \n');
@@ -131,8 +143,8 @@ class IngestSummariser extends RunbookGatherer {
 		return `https://github.com/${this.repository}/blob/${this.sha}/${path}`;
 	}
 
-	statusUrl(runbookSha) {
-		const url = `${bizOpsUrl}/runbook.md/status`;
+	runbookMdUrl(runbookSha, path = 'status') {
+		const url = `${bizOpsUrl}/runbook.md/${path}`;
 		return `${url}/${this.repository}/${runbookSha}?commitSha=${this.sha}`;
 	}
 
