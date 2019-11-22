@@ -16,7 +16,7 @@ const { BIZ_OPS_URL, NODE_ENV } = process.env;
 class RunbookMdApp extends IngestSummariser {
 	async createCheck(context) {
 		if (!this.results) {
-			this.summariseResults();
+			await this.summariseResults();
 		}
 
 		const { conclusion, title, summary, text } = this.results;
