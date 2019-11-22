@@ -105,10 +105,13 @@ const ingest = async payload => {
 			repository,
 		);
 	} catch (error) {
-		throw ingestError('parse-ok-update-repository-error', {
-			details,
-			error,
-		});
+		updateSystemRepositoryResult = ingestError(
+			'parse-ok-update-repository-error',
+			{
+				details,
+				error,
+			},
+		);
 	}
 
 	Object.assign(details, { writeResult, updateSystemRepositoryResult });
