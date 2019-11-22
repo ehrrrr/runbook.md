@@ -75,7 +75,10 @@ const fetchRunbooksByCommit = async (
 			repository,
 			githubName,
 			details,
-			systemCode: systemCode || recordSystemCode,
+			systemCode:
+				(details.parseData && details.parseData.code) ||
+				systemCode ||
+				recordSystemCode,
 			childLogger,
 			traceId,
 		}));
@@ -109,7 +112,11 @@ const ingestRunbook = async (
 		traceId,
 		checkRunUrl,
 	},
-	{ event = 'INGEST', postGithubIssueOnError = true, returnError = false },
+	{
+		event = 'INGEST',
+		postGithubIssueOnError = true,
+		returnError = false,
+	} = {},
 ) => {
 	try {
 		const result = await ingest({

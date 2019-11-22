@@ -2,7 +2,7 @@
 		"private": true,
 		"name": "runbooks.md",
 		"version": "1.0.0",
-		"description": "Automated import of runbook.md",
+		"description": "Automated import of *runbook.md",
 		"main": "index.js",
 		"repository": {
 				"type": "git",

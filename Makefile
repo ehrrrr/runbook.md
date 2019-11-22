@@ -97,7 +97,7 @@ send-message-to-local-stream:
 	aws kinesis --endpoint-url http://localhost:4567 \
 	put-record --stream-name change-request-api-test-enriched-stream \
 	--partition-key “MyFirstMessage” \
-	--data "{\"githubData\":{\"htmlUrl\":\"https://github.com/Financial-Times/runbook.md/pull/182\"},\"user\":{\"githubName\":\"doramatadora\"},\"systemCode\":\"biz-ops-runbook-md\",\"commit\":\"2ef740c14c006521fca2dd51f65198f4900163ba\",\"loggerContext\":{\"traceId\":\"HASH_HERE\"},\"isProdEnv\":true}"
+	--data "{\"githubData\":{\"htmlUrl\":\"https://github.com/Financial-Times/runbook.md/pull/182\"},\"user\":{\"githubName\":\"doramatadora\"},\"systemCode\":\"biz-ops-runbook-md\",\"commit\":\"5083b1a7ef1f110e6e796808f069a5ae2d7474a8\",\"loggerContext\":{\"traceId\":\"HASH_HERE\"},\"isProdEnv\":true}"
 
 run: clean run-local-message-stream run-web
 

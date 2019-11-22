@@ -90,8 +90,8 @@ class IngestSummariser extends RunbookGatherer {
 
 	summariseIngestResult({
 		sha,
-		systemCode,
 		path,
+		systemCode,
 		url,
 		state,
 		message,
@@ -109,9 +109,14 @@ class IngestSummariser extends RunbookGatherer {
 			invalid: Object.keys(validationErrors).length,
 			updated: Object.keys(updatedFields).length,
 		};
+		systemCode = parseData.systemCode || systemCode;
 		const { emoji, status } = this.getStateDescriptors(state);
 		const statusUrl = this.runbookMdUrl(sha);
 		const reingestUrl = this.runbookMdUrl(sha, 'reingest');
+		const reingestCopy = isStringNotEmpty(systemCode)
+			? `[**Trigger ingest »**](${reingestUrl}) – :warning: this will update the system **${systemCode}** in Biz-Ops`
+			: // TODO: link to docs explaining system codes priority
+			  `**Ingest trigger disabled** – no system code found. Please specify a valid system code in this runbook's contents, filename, or in the repository config for runbook.md.`;
 
 		return [
 			`## ${path}  \n`,
@@ -129,11 +134,7 @@ class IngestSummariser extends RunbookGatherer {
 			// fields updated in Biz-Ops
 			count.updated && `* **${count.updated}** fields updated in Biz-Ops`,
 			// fields updated in Biz-Ops
-			state === 'success' &&
-				(isStringNotEmpty(systemCode)
-					? `[**Trigger ingest »**](${reingestUrl}) – :warning: this will update the system **${systemCode}** in Biz-Ops`
-					: // TODO: link to docs explaining system codes priority
-					  `**Ingest trigger disabled** – no system code found. Please specify a valid system code in this runbook's contents, filename, or in the repository config for runbook.md.`),
+			state === 'success' && `\n -------------- \n${reingestCopy}`,
 		]
 			.filter(line => !!line)
 			.join('  \n');

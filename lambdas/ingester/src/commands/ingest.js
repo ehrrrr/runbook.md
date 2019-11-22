@@ -54,28 +54,31 @@ const ingest = async payload => {
 		details = await parseAndValidate(payload.content),
 	} = payload;
 
-	// 1. if we don't need to update Biz-Ops, we are done
+	const { parseData = {} } = details;
+
+	// 1. check if the runbook specifies a system code
+	const systemCode = parseData.code || payload.systemCode;
+	const commonResponseProperties = { systemCode, details };
+
+	// 2. if we don't need to update Biz-Ops, we are done
 	if (!shouldWriteToBizOps || shouldWriteToBizOps === 'no') {
 		return {
 			message: 'Parse & validation complete. Biz-Ops update skipped.',
 			code: 'parse-ok-update-skipped',
-			details,
+			...commonResponseProperties,
 		};
 	}
 
-	// 2. check if the runbook specifies a system code
-	const systemCode = details.parseData.code || payload.systemCode;
 	// from this point on, we'll need a system code
 	if (!systemCode) {
-		throw ingestError('parse-ok-systemCode-missing', {
-			details,
-		});
+		throw ingestError(
+			'parse-ok-systemCode-missing',
+			commonResponseProperties,
+		);
 	}
 	// and a valid API key for Biz-Ops
 	if (!bizOpsApiKey) {
-		throw ingestError('parse-ok-apiKey-missing', {
-			details,
-		});
+		throw ingestError('parse-ok-apiKey-missing', commonResponseProperties);
 	}
 
 	// 3. check if the system code exists in Biz-Ops
@@ -90,9 +93,9 @@ const ingest = async payload => {
 	);
 	if (status !== 200) {
 		throw ingestError('parse-ok-update-error', {
-			details,
 			writeResult,
 			status,
+			...commonResponseProperties,
 		});
 	}
 
@@ -118,6 +121,7 @@ const ingest = async payload => {
 
 	return {
 		status,
+		systemCode,
 		message: `Parse & validation complete. Biz-Ops update successful.`,
 		code: 'parse-ok-update-ok',
 		details,
