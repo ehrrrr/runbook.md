@@ -48,7 +48,10 @@ const fetchRunbooksByCommit = async (
 		// 1. make sure we have a repository; format owner/repositoryName
 		const repository = parseRepositoryName(gitRepositoryName, gitRefUrl);
 		// 2. make sure we have some runbooks saved in DynamoDb
-		const { runbookHashes } = await getStoredResult(repository, commit);
+		const { runbookHashes, checkRunUrl } = await getStoredResult(
+			repository,
+			commit,
+		);
 
 		if (!runbookHashes) {
 			throw new Error(
@@ -59,27 +62,15 @@ const fetchRunbooksByCommit = async (
 		// 3. retrieve ingest details
 		const runbooks = [];
 		for (const slice of chunk(runbookHashes, DYNAMODB_CONCURRENCY)) {
-			try {
-				const validRunbooks = (
-					await batchGet(repository, slice)
-				).filter(({ state }) => state === 'success');
-				runbooks.push(...validRunbooks);
-				await sleep(THROTTLE_MILLISECONDS);
-			} catch (error) {
-				// post issue if we couldn't retrieve runbook ingest details from DynamoDb
-				await postIssue({
-					commit,
-					repository,
-					githubName,
-					errorCause: error.message,
-					recordSystemCode,
-					traceId,
-				});
-				throw error;
-			}
+			const validRunbooks = (await batchGet(repository, slice)).filter(
+				({ state }) => state === 'success',
+			);
+			runbooks.push(...validRunbooks);
+			await sleep(THROTTLE_MILLISECONDS);
 		}
 
 		return runbooks.map(({ details, systemCode }) => ({
+			checkRunUrl,
 			commit,
 			repository,
 			githubName,
@@ -107,6 +98,7 @@ const fetchAllRunbooks = async (parsedRecords, childLogger) => {
 };
 
 const ingestRunbook = async ({
+	checkRunUrl,
 	commit,
 	systemCode,
 	repository,
@@ -140,6 +132,7 @@ const ingestRunbook = async ({
 		});
 
 		await postIssue({
+			checkRunUrl,
 			commit,
 			repository,
 			githubName,
