@@ -4,12 +4,12 @@
 
 --
 
-**boast** is the specification for representing a biz-ops runbook in a
+**boast** is the specification for representing a Biz Ops runbook in a
 [syntax tree](https://github.com/syntax-tree/unist#syntax-tree). It implements the [unist](https://github.com/syntax-tree/unist) spec, and is a superset of the [mdast](https://github.com/syntax-tree/mdast) spec.
 
 ## Introduction
 
-This document defines the format for representing a biz-ops runbook as a [Markdown](https://daringfireball.net/projects/markdown/) file.
+This document defines the format for representing a Biz Ops runbook as a [Markdown](https://daringfireball.net/projects/markdown/) file.
 
 ## Nodes
 
@@ -63,7 +63,7 @@ interface Name <: Literal {
 }
 ```
 
-**Name** ([**Literal**](#literal)) represents the `name` property in a biz-ops
+**Name** ([**Literal**](#literal)) represents the `name` property in a Biz Ops
 runbook.
 
 ### `Subdocument`
@@ -94,7 +94,7 @@ interface Description <: Subdocument {
 ```
 
 **Description** ([**Subdocument**](#subdocument)) represents the `description`
-property in a biz-ops runbook.
+property in a Biz Ops runbook.
 
 ```md
 # Big Monkey
@@ -123,15 +123,15 @@ Yields, for description:
 ```idl
 interface Property <: Subdocument {
   type: "property",
-  propertyType: [biz-ops property type],
+  propertyType: [Biz Ops property type],
   children: [mdast Root],
   key: [String]
 }
 ```
 
 **Property** ([**Subdocument**](#subdocument)) represents a
-property in a biz-ops runbook. The biz-ops property types are defined in
-[biz-ops-schema](https://github.com/Financial-Times/biz-ops-schema/blob/01ae5ad/lib/primitive-types-map.js)
+property in a Biz Ops runbook. The Biz Ops property types are defined in
+[Biz Ops schema](https://github.com/Financial-Times/biz-ops-schema/blob/01ae5ad/lib/primitive-types-map.js)
 The only permitted children are an mdast subdocument. The key is the key for
 that property. If there are no children, a value may be defined which is the
 processed value.
