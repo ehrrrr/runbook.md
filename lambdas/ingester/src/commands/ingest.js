@@ -97,6 +97,7 @@ const ingest = async payload => {
 	}
 
 	// 5. update the system's repository in Biz-Ops
+	// this shouldn't fail the ingest
 	let updateSystemRepositoryResult;
 	try {
 		updateSystemRepositoryResult = await updateSystemRepository(

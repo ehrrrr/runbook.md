@@ -126,6 +126,14 @@ functions:
       - http:
           path: /runbook.md/status/{owner}/{repo}/{hash}
           method: get
+  reingest:
+    description: Manual reingest
+    handler: lambdas/ingester/src/reingestHandler.handler
+    timeout: 30
+    events:
+      - http:
+          path: /runbook.md/reingest/{owner}/{repo}/{hash}
+          method: get
   githubWebhook:
     description: GitHub webhook responder
     handler: lambdas/ingester/src/githubWebhookHandler.handler

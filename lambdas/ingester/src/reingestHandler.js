@@ -2,10 +2,12 @@ const lambdaLogger = require('@financial-times/lambda-logger');
 const { get: getStoredResult } = require('./lib/dynamodb-client');
 const { json, renderPage } = require('./lib/response');
 const { createLambda } = require('./lib/lambda');
+const { ingest } = require('./commands/ingest');
+const template = require('./templates/reingest-page');
 
-const template = require('./templates/status-page');
+const { BIZ_OPS_API_KEY } = process.env;
 
-const statusPageHandler = async event => {
+const reingestHandler = async event => {
 	const { owner, repo, hash } = event.pathParameters;
 	const { commitSha } = event.queryStringParameters;
 	const repository = `${owner}/${repo}`;
@@ -33,13 +35,41 @@ const statusPageHandler = async event => {
 			event: 'RETRIEVED_STORED_RESULT',
 		});
 
+		if (storedResult.state !== 'success') {
+			logger.error({ event: 'RUNBOOK_INVALID' });
+			return json(403, {
+				message: 'Only valid runbooks can be reingested.',
+			});
+		}
+
 		const {
-			details: { validationErrors = [] } = {},
+			details,
+			systemCode,
 			commitSha: originalCommitSha,
 		} = storedResult;
 
-		const commitUrl = `https://github.com/${owner}/${repo}/commit/${originalCommitSha}`;
+		try {
+			const { status, message } = await ingest({
+				shouldWriteToBizOps: true,
+				bizOpsApiKey: BIZ_OPS_API_KEY,
+				repository,
+				systemCode,
+				details,
+			});
+			Object.assign(storedResult, { status, message });
+			logger.info({
+				event: 'RUNBOOK_REINGEST_SUCCESSFUL',
+			});
+		} catch (error) {
+			const { status, message } = error;
+			Object.assign(storedResult, { status, message });
+			logger.error({
+				event: 'RUNBOOK_REINGEST_FAILED',
+				error,
+			});
+		}
 
+		const commitUrl = `https://github.com/${owner}/${repo}/commit/${originalCommitSha}`;
 		const alertState =
 			storedResult.state === 'success' &&
 			Object.keys(validationErrors).length
@@ -64,6 +94,7 @@ const statusPageHandler = async event => {
 			event: 'FAILED_FETCH_STORED_RESULT',
 			error,
 		});
+
 		return json(404, {
 			message:
 				'Failed to fetch stored validation result. Please make a fresh commit.',
@@ -71,4 +102,4 @@ const statusPageHandler = async event => {
 	}
 };
 
-exports.handler = createLambda(statusPageHandler);
+exports.handler = createLambda(reingestHandler);
