@@ -63,7 +63,7 @@ const fetchRunbooksByCommit = async (
 				const validRunbooks = (
 					await batchGet(repository, slice)
 				).filter(({ state }) => state === 'success');
-				runbooks.push(validRunbooks);
+				runbooks.push(...validRunbooks);
 				await sleep(THROTTLE_MILLISECONDS);
 			} catch (error) {
 				// post issue if we couldn't retrieve runbook ingest details from DynamoDb
@@ -172,7 +172,6 @@ const processRunbookMd = async (parsedRecords, log) => {
 			parsedRecords,
 			childLogger,
 		);
-
 		if (!runbookInstances.length) {
 			return json(200, {
 				message: 'No runbooks to ingest.',

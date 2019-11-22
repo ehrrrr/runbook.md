@@ -61,7 +61,7 @@ const batchGet = (repository, hashArray) =>
 			},
 		})
 		.promise()
-		.then(({ Responses: { [TABLE_NAME]: items } = {} }) =>
+		.then(({ Responses: { [TABLE_NAME]: items = [] } = {} }) =>
 			items.map(({ ResultJson: { S: result } }) => JSON.parse(result)),
 		);
 

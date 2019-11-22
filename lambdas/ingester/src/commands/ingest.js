@@ -48,11 +48,10 @@ const parseAndValidate = async rawRunbook => {
 
 const ingest = async payload => {
 	const {
-		content,
 		shouldWriteToBizOps,
 		bizOpsApiKey,
 		repository,
-		details = await parseAndValidate(content),
+		details = await parseAndValidate(payload.content),
 	} = payload;
 
 	// 1. if we don't need to update Biz-Ops, we are done
