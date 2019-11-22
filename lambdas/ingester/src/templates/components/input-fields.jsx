@@ -28,16 +28,21 @@ const RunbookEntry = ({ placeholder, content, readOnly }) => {
 
 	props.hidden = !content;
 
+	// eslint-disable-next-line react/jsx-props-no-spreading
 	return <FormField {...props} />;
 };
 
-const RunbookImport = ({ content }) => {
+const RunbookImport = ({ content, systemCode, systemCodeExists }) => {
 	return content ? null : (
 		<label className="o-forms-field" id="import-or-manual">
 			<span className="o-forms-title">
 				<span htmlFor="system-code" className="o-forms__label">
-					Enter a system code to import a runbook.md from existing Biz
-					Ops data
+					Enter an <b>existing</b> system code to import a runbook.md
+					from Biz Ops data.{' '}
+					{systemCode &&
+						(systemCodeExists
+							? ''
+							: `We couldn't find the system code above in Biz Ops.`)}
 				</span>
 			</span>
 

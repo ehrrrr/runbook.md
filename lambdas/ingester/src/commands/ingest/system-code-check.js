@@ -9,7 +9,7 @@ const checkSystemCodeExists = async (systemCode, details) => {
 			error.status === 404
 				? 'parse-ok-system-code-not-found'
 				: 'parse-ok-biz-ops-api-error';
-		throw ingestError(code, { details, error });
+		throw ingestError(code, { details, systemCode, error });
 	}
 };
 

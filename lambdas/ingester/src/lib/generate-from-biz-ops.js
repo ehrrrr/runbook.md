@@ -1,6 +1,9 @@
 const schema = require('@financial-times/biz-ops-schema');
 const { graphql } = require('./biz-ops-client');
 const runbookMd = require('../../../../libraries/parser');
+const {
+	checkSystemCodeExists,
+} = require('../commands/ingest/system-code-check');
 
 const isForbiddenType = type => ['DateTime', 'Date', 'Time'].includes(type);
 
@@ -37,6 +40,9 @@ const uncamelCase = str =>
 		.replace(/^[a-z]/, $0 => $0.toUpperCase());
 
 exports.generate = async systemCode => {
+	// this will throw if the systemCode is not in Biz Ops
+	await checkSystemCodeExists(systemCode);
+
 	const { excludedProperties } = runbookMd(schema);
 
 	const systemSchema = schema.getType('System', { groupProperties: true });

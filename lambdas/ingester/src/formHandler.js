@@ -12,13 +12,23 @@ const { default: placeholder } = require('../../../docs/example-runbook.md');
 const formHandler = async event => {
 	logger.info({ event: 'RUNBOOK_INGEST_FORM_REQUEST' });
 	const { systemCode } = event.queryStringParameters || {};
+	let content;
+	let systemCodeExists = false;
+	try {
+		content = await generate(systemCode);
+		systemCodeExists = true;
+	} catch (error) {
+		// system code does not exist in Biz-Ops
+		content = null;
+	}
 	return renderPage(
 		template,
 		{
 			layout: 'docs',
 			placeholder,
 			systemCode,
-			content: systemCode ? await generate(systemCode) : null,
+			systemCodeExists,
+			content,
 		},
 		event,
 	);

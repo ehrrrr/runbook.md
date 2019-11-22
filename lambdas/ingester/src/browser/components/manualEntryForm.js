@@ -36,11 +36,18 @@ module.exports = function(form) {
 	const runbookContent = form.querySelector('#content');
 	const choiceForm = form.querySelector('#import-or-manual');
 
+	const disableSubmitButton = () =>
+		choiceForm ? null : submitButton.setAttribute('disabled', true);
+	const enableSubmitButton = () => submitButton.removeAttribute('disabled');
+
 	if (choiceForm) {
 		const cleanup = (remove = true) => {
 			form.querySelector('#runbookContent').removeAttribute('hidden');
 			if (remove) {
+				enableSubmitButton();
 				choiceForm.parentNode.removeChild(choiceForm);
+			} else {
+				disableSubmitButton();
 			}
 		};
 
@@ -54,12 +61,14 @@ module.exports = function(form) {
 		const importButton = choiceForm.querySelector('#import-from-biz-ops');
 
 		const populate = async () => {
+			disableSubmitButton();
 			const systemCode = form.querySelector('#import-system-code').value;
 			if (!systemCode) {
 				// eslint-disable-next-line no-alert
 				window.alert('Please enter a system code');
 				return;
 			}
+
 			let removeForm = false;
 			const runbook = await fetch(
 				`/runbook.md/export?systemCode=${systemCode}`,

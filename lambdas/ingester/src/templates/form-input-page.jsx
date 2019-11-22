@@ -7,6 +7,7 @@ const { ValidationResult } = require('./components/validation-result');
 const ValidateForm = ({
 	status,
 	systemCode,
+	systemCodeExists,
 	placeholder,
 	readOnly,
 	message,
@@ -45,7 +46,11 @@ const ValidateForm = ({
 			</h2>
 			<div className="o-grid-row fullwidth with-margin-bottom">
 				<div data-o-grid-colspan="12">
-					<RunbookImport content={content} />
+					<RunbookImport
+						content={content}
+						systemCode={systemCode}
+						systemCodeExists={systemCodeExists}
+					/>
 					<RunbookEntry
 						placeholder={placeholder}
 						content={content}
@@ -62,6 +67,7 @@ const ValidateForm = ({
 					className="o-buttons o-buttons--primary o-buttons--mono o-buttons--big"
 					type="submit"
 					id="submitRunbookForm"
+					disabled
 				>
 					{readOnly ? `Resubmit` : `Submit`}
 				</button>
