@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   change-api: financial-times/change-api@0.24.0
+  ft-snyk-orb: financial-times/ft-snyk-orb@0
 
 executors:
     node:
@@ -128,6 +129,12 @@ workflows:
                   requires:
                       - install
                   filters: *only_version_tags
+            #Scan package.json for vulnerable dependencies while developing
+            - ft-snyk-orb/scan-js-packages:
+                  context: rel-eng-creds
+                  requires:
+                      - install
+                  filters: *only_version_tags
             - release_test:
                   context: rel-eng-creds
                   requires:
@@ -156,6 +163,16 @@ workflows:
                       <<: *only_version_tags
                       branches:
                           ignore: /.*/
+          #Scan and monitor vulnerabilities once in production
+            - ft-snyk-orb/scan-and-monitor-js-packages:
+                name: snyk-scan-and-monitor
+                context: rel-eng-creds
+                requires:
+                  - release_prod
+                filters:
+                  <<: *only_version_tags
+                  branches:
+                    ignore: /.*/
             - change-api/release-log:
                 name: 'change_log_prod'
                 context: 'rel-eng-creds'
