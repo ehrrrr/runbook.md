@@ -1,4 +1,4 @@
-const schema = require('@financial-times/biz-ops-schema');
+const schema = require('@financial-times/tc-schema-sdk');
 const { default: here } = require('outdent');
 const runbookMd = require('..');
 
