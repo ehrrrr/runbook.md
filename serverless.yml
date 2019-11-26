@@ -108,7 +108,7 @@ functions:
           path: /runbook.md
           method: post
   release:
-    description: Apply runbook.md changes on prod release (probot app)
+    description: Ingest runbooks on every production release (triggered by Change API)
     handler: lambdas/ingester/src/releaseHandler.handler
     timeout: 30
     events:
