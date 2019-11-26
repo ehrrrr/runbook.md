@@ -1,8 +1,8 @@
-const bizOpsSchema = require('@financial-times/biz-ops-schema');
+const bizOpsSchema = require('@financial-times/tc-schema-sdk');
 const logger = require('@financial-times/lambda-logger');
 
-bizOpsSchema.configure({
-	baseUrl: process.env.SCHEMA_BASE_URL,
+bizOpsSchema.init({
+	schemaBaseUrl: process.env.SCHEMA_BASE_URL,
 	updateMode: 'stale',
 	logger,
 });

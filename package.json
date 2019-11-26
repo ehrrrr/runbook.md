@@ -15,9 +15,9 @@
 		},
 		"homepage": "https://github.com/Financial-Times/runbook.md#readme",
 		"dependencies": {
-				"@financial-times/biz-ops-schema": "^3.30.1",
 				"@financial-times/lambda-logger": "^2.0.0",
 				"@financial-times/s3o-lambda": "^2.0.3",
+				"@financial-times/tc-schema-sdk": "0.0.9",
 				"@probot/serverless-lambda": "^0.3.0",
 				"add-line-numbers": "^1.0.1",
 				"http-errors": "^1.7.3",
