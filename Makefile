@@ -33,13 +33,59 @@ else
 	jest --watchAll
 endif
 
+clean: dev-stream-delete
+	rm -rf dist/
+
+run: clean dev-stream run-web
+
+run-web:
+	@concurrently "make build-statics" "make serverless-offline"
+
 serverless-offline:
 	serverless offline --stage test start
 
-deploy: build-statics move-asset-manifest upload-statics deploy-aws
+# Local Kinesis emulator
+dev-stream-container:
+	# if there is no localstreams container running,
+	# first remove any exited, blocking container
+	# then run the container with the kinesalite kinesis emulator
+	# see https://docs.docker.com/engine/reference/commandline/ps/
+	@if [ -z "$(shell docker ps -q -f name=^/localstreams$)" ]; then \
+		docker rm localstreams &> /dev/null && \
+		docker run -d --name localstreams -p 4567:4567 instructure/kinesalite; \
+	fi;
 
+dev-stream-check:
+	aws --region eu-west-1 --no-verify-ssl \
+	--endpoint-url=http://localhost:4567 kinesis list-streams \
+	| grep change-api-dev-stream
+
+dev-stream-create:
+	aws --region eu-west-1 --no-verify-ssl --endpoint-url=http://localhost:4567 kinesis \
+	create-stream --stream-name change-api-dev-stream --shard-count 1
+
+dev-stream-delete:
+	aws kinesis delete-stream --stream-name change-api-dev-stream
+
+dev-stream: dev-stream-container
+	make dev-stream-check && echo 'Stream ready' || make dev-stream-create 
+
+INCOMING_MESSAGE="{\"githubData\":{\"htmlUrl\":\"https://github.com/Financial-Times/runbook.md/pull/182\"},\"user\":{\"githubName\":\"doramatadora\"},\"systemCode\":\"biz-ops-runbook-md\",\"commit\":\"5083b1a7ef1f110e6e796808f069a5ae2d7474a8\",\"loggerContext\":{\"traceId\":\"HASH_HERE\"},\"isProdEnv\":true}"
+
+dev-stream-message: 
+	aws kinesis --endpoint-url http://localhost:4567 \
+	put-record --stream-name change-api-dev-stream --partition-key “LocalMesage” \
+	--data $(INCOMING_MESSAGE)
+
+# Packaging & deployment
 package:
 	serverless package
+
+build-statics:
+	@if [ -z $(CI) ]; \
+		then webpack-dev-server --config webpack.browser.config.js --mode development; \
+		else webpack --config webpack.browser.config.js --mode production; \
+	fi
 
 upload-statics:
 	aws s3 sync \
@@ -47,66 +93,15 @@ upload-statics:
 	--exclude "*.json" \
 	./dist/browser s3://biz-ops-statics.${AWS_ACCOUNT_ID}/biz-ops-runbook-md
 
-deploy-aws:
-	serverless deploy --stage ${ENVIRONMENT} --verbose
-
-clean:
-	rm -rf dist/
-
-transpile:
-	@if [ -z $(CI) ]; \
-		then serverless webpack; \
-		else serverless webpack --mode production; \
-	fi
-
-build-production-assets:
-	webpack --config webpack.browser.config.js --mode production;
-
-build-statics:
-	@if [ -z $(CI) ]; \
-		then webpack-dev-server --config webpack.browser.config.js --mode development; \
-		else make build-production-assets; \
-	fi
-
-run-local-stream-container:
-	# if there is no localstreams container running,
-	# first check if an exited container blocks (and remove it)
-	# then run the container with the kinesalite kinesis emulator
-	# see https://docs.docker.com/engine/reference/commandline/ps/
-	@if [ -z "$(shell docker ps -q -f name=^/localstreams$)" ]; then \
-		if [ "$(shell docker ps -aq -f status=exited -f name=^/localstreams$)" ]; then \
-			docker rm localstreams; \
-		fi; \
-		docker run -d --name localstreams -p 4567:4567 instructure/kinesalite; \
-	fi;
-
-emulate-local-kinesis-stream:
-	@if [ -z "$(shell aws --region eu-west-1 --no-verify-ssl \
-	--endpoint-url=http://localhost:4567 kinesis list-streams \
-	| grep change-request-api-test-enriched-stream)" ]; then \
-		aws --region eu-west-1 --no-verify-ssl --endpoint-url=http://localhost:4567 kinesis \
-		create-stream --stream-name change-request-api-test-enriched-stream --shard-count 1; \
-	fi
-
-run-local-message-stream: run-local-stream-container emulate-local-kinesis-stream
-
-delete-local-stream:
-	aws kinesis delete-stream --stream-name change-request-api-test-enriched-stream
-
-send-message-to-local-stream: 
-	aws kinesis --endpoint-url http://localhost:4567 \
-	put-record --stream-name change-request-api-test-enriched-stream \
-	--partition-key “MyFirstMessage” \
-	--data "{\"githubData\":{\"htmlUrl\":\"https://github.com/Financial-Times/runbook.md/pull/182\"},\"user\":{\"githubName\":\"doramatadora\"},\"systemCode\":\"biz-ops-runbook-md\",\"commit\":\"5083b1a7ef1f110e6e796808f069a5ae2d7474a8\",\"loggerContext\":{\"traceId\":\"HASH_HERE\"},\"isProdEnv\":true}"
-
-run: clean run-local-message-stream run-web
-
-run-web:
-	@concurrently "make build-statics" "make serverless-offline"
-
 move-asset-manifest:
 	[ -f "./dist/browser/manifest.json" ] && mv "./dist/browser/manifest.json" ./lambdas/ingester/src/assets/
 
+deploy-aws:
+	serverless deploy --stage ${ENVIRONMENT} --verbose
+
+deploy: build-statics move-asset-manifest upload-statics deploy-aws
+
+# Production database
 create-database:
 	aws cloudformation create-stack \
 	--region eu-west-1 \
