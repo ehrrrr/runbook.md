@@ -21,7 +21,7 @@ const unifiedProcessor = function(schema) {
 		const typeNames = new Set(types.map(type => type.name));
 
 		const validateProperty = (key, value) => {
-			return schema.validateProperty('System', key, value);
+			return schema.validators.validateProperty('System', key, value);
 		};
 
 		return unified()
