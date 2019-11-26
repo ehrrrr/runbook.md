@@ -16,7 +16,7 @@ exports.command = async context => {
 
 // respond to github webhooks
 // uses probot's application class
-// https://probot.context.github.io/docs/
+// https://probot.github.io/docs/
 exports.webhookListener = bot => {
 	bot.on('check_suite.requested', context => exports.command(context));
 	bot.on('check_run.rerequested', context => exports.command(context));

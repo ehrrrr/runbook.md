@@ -74,7 +74,7 @@ const updateSystemRepository = async (systemCode, gitRepositoryName) => {
 		options,
 	);
 	if (!response.ok) {
-		logAndThrowError(
+		await logAndThrowError(
 			response.status,
 			await extractErrorMessageFromResponse(response),
 			{
@@ -101,10 +101,14 @@ const systemHeadRequest = async code => {
 		options,
 	);
 	if (!response.ok) {
-		logAndThrowError(response.status, response.headers.get('debug-error'), {
-			code,
-			method: 'head',
-		});
+		await logAndThrowError(
+			response.status,
+			response.headers.get('debug-error'),
+			{
+				code,
+				method: 'head',
+			},
+		);
 	}
 };
 

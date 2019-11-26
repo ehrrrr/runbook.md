@@ -31,7 +31,7 @@ class WebhookResponder extends AppConfig {
 	}
 
 	bail(reason, event = 'BAILED') {
-		this.logger.error({ event, reason });
+		this.logger.info({ event, reason });
 		throw new Error(reason);
 	}
 

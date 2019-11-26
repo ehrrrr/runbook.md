@@ -1,7 +1,7 @@
 const { IngestSummariser } = require('./ingest-summariser');
 const { put: storeResult } = require('../../lib/dynamodb-client');
 
-const bizOpsUrl = process.env.BIZ_OPS_URL;
+const { BIZ_OPS_URL, NODE_ENV } = process.env;
 
 // CLASS HIERARCHY
 //
@@ -16,7 +16,7 @@ const bizOpsUrl = process.env.BIZ_OPS_URL;
 class RunbookMdApp extends IngestSummariser {
 	async createCheck(context) {
 		if (!this.results) {
-			this.summariseResults();
+			await this.summariseResults();
 		}
 
 		const { conclusion, title, summary, text } = this.results;
@@ -33,9 +33,12 @@ class RunbookMdApp extends IngestSummariser {
 				data: { html_url: checkRunUrl },
 			} = await context.github.checks.create(
 				context.repo({
-					name: 'Runbook Validator',
+					name:
+						NODE_ENV === 'production'
+							? 'Runbook Validator'
+							: 'Runbook.md Staging',
 					head_sha: this.sha,
-					details_url: `${bizOpsUrl}/runbook.md/about`,
+					details_url: `${BIZ_OPS_URL}/runbook.md/about`,
 					status: 'completed',
 					conclusion,
 					completed_at: new Date(),
@@ -50,12 +53,16 @@ class RunbookMdApp extends IngestSummariser {
 			// for status page navigation
 			// and total / passed / failed / average score for tracking diff to master (TODO)
 			const { total, passCount, failed, avgScore } = this.results;
+			const runbookHashes = this.runbooks
+				.filter(({ state }) => state === 'success')
+				.map(({ sha }) => sha);
 			await storeResult(this.repository, this.sha, {
 				checkRunUrl,
 				avgScore,
 				passCount,
 				failed,
 				total,
+				runbookHashes,
 			});
 			return true;
 		} catch (error) {

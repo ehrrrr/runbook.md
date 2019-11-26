@@ -1,5 +1,7 @@
 const stripHtmlComments = require('strip-html-comments');
-const setActualLineNumber = require('../../src/lib/set-actual-line-number');
+const {
+	setActualLineNumber,
+} = require('../../src/commands/ingest/set-actual-line-number');
 const runbookMd = require('../../src/lib/parser');
 const { runbookWithComments } = require('../fixtures');
 

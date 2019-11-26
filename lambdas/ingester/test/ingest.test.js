@@ -1,10 +1,10 @@
 jest.mock('../src/lib/external-apis');
-jest.mock('../src/lib/code-validation');
+jest.mock('../src/commands/ingest/code-validation');
 jest.mock('../src/lib/biz-ops-client');
 
 const runbookMd = require('../src/lib/parser');
 const externalApis = require('../src/lib/external-apis');
-const bizOpsValidation = require('../src/lib/code-validation');
+const bizOpsValidation = require('../src/commands/ingest/code-validation');
 const bizOpsClient = require('../src/lib/biz-ops-client');
 
 const { ingest } = require('../src/commands/ingest');
@@ -191,18 +191,22 @@ describe('ingest command', () => {
 	});
 
 	describe('when biz-ops api merge relationshipAction is failed', () => {
-		test('and writing to biz-ops is enabled, fail', async () => {
+		test('and writing to biz-ops is enabled, decorate the response with the error', async () => {
+			const error = new Error('update-repository-error');
 			spies.updateSystemRepository = jest
 				.spyOn(bizOpsClient, 'updateSystemRepository')
-				.mockRejectedValue({});
+				.mockRejectedValue(error);
 			const { result, parseData } = await runIngest({
 				shouldWriteToBizOps: true,
 			});
 			expect(result).toMatchObject({
-				rejected: true,
-				code: expect.stringMatching('parse-ok-update-repository-error'),
+				code: 'parse-ok-update-ok',
 				details: {
 					parseData,
+					updateSystemRepositoryResult: {
+						code: 'parse-ok-update-repository-error',
+						error,
+					},
 				},
 			});
 		});

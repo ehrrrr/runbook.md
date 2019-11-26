@@ -1,3 +1,7 @@
 runbooks:
     exclude:
         - 'rx:docs/'
+
+    systemCodes:
+        # paths are relative to root, omitting ./ (case-insensitive)
+        biz-ops-runbook-md: RUNBOOK.MD

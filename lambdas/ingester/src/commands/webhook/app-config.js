@@ -5,7 +5,7 @@ const {
 	coerceValue,
 } = require('../../lib/type-helpers');
 
-const { GITHUB_WEBHOOK_FAIL_MODE: defaultFailureMode = 'any' } = process.env;
+const { GITHUB_WEBHOOK_FAIL_MODE = 'any' } = process.env;
 
 class AppConfig {
 	constructor({
@@ -23,7 +23,7 @@ class AppConfig {
 			failOn: coerceValue(
 				failOn,
 				['any', 'all', 'none'],
-				defaultFailureMode,
+				GITHUB_WEBHOOK_FAIL_MODE,
 			),
 		};
 
