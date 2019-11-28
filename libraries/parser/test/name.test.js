@@ -2,8 +2,8 @@ const schema = require('@financial-times/tc-schema-sdk');
 const { default: here } = require('outdent');
 const runbookMd = require('..');
 
-schema.configure({
-	baseUrl: process.env.SCHEMA_BASE_URL,
+schema.init({
+	schemaBaseUrl: process.env.SCHEMA_BASE_URL,
 	updateMode: 'stale',
 	logger: console,
 });
