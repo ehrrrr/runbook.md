@@ -3,10 +3,11 @@
 const schemaInstance = require('@financial-times/tc-schema-sdk');
 const schemaFixture = require('./fixtures/biz-ops-schema.json');
 
-const schema = schemaInstance.init({
+schemaInstance.init({
 	// eslint-disable-next-line global-require
 	schemaData: schemaFixture,
+	updateMode: 'stale',
 });
-schema.init = () => null;
+schemaInstance.init = () => null;
 
-module.exports = schema;
+module.exports = schemaInstance;

@@ -1,4 +1,4 @@
 const runbookMd = require('../../../../libraries/parser');
-const schema = require('../lib/get-configured-schema');
+const schema = require('./get-configured-schema');
 
 module.exports = runbookMd(schema);
