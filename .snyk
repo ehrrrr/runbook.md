@@ -19,7 +19,7 @@ ignore:
   SNYK-JS-HANDLEBARS-480388:
     - probot > hbs > handlebars:
         reason: No upgrade available
-        expires: '2019-12-06T17:18:36.040Z'
+        expires: '2020-01-12T12:46:40.506Z'
   SNYK-JS-HANDLEBARS-534478:
     - probot > hbs > handlebars:
         reason: No fix
