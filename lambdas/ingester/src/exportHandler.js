@@ -15,7 +15,7 @@ const handler = async event => {
 			statusCode: status,
 			body:
 				code === 'parse-ok-system-code-not-found'
-					? 'Please enter a valid system code. The system must exist in Biz-Ops.'
+					? 'Please enter a valid system code. The system must exist in Biz Ops.'
 					: message,
 		};
 	}

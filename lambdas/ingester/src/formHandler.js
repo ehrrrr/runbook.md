@@ -18,7 +18,7 @@ const formHandler = async event => {
 		content = await generate(systemCode);
 		systemCodeExists = true;
 	} catch (error) {
-		// system code does not exist in Biz-Ops
+		// system code does not exist in Biz Ops
 		content = null;
 	}
 	return renderPage(

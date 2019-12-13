@@ -66,7 +66,7 @@ const About = () => {
 				<a href="https://github.com/Financial-Times/runbook.md/blob/master/docs/example-runbooks.yml">
 					custom configuration
 				</a>{' '}
-				for updating system information in Biz-Ops. Visit{' '}
+				for updating system information in Biz Ops. Visit{' '}
 				<a href="https://github.com/organizations/Financial-Times/settings/installations/1210233">
 					the github app page and add your repository
 				</a>{' '}

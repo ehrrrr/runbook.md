@@ -31,7 +31,7 @@ async function submitForm(event, form) {
 }
 
 module.exports = function(form) {
-	// toggle visibility of optional Biz-Ops write fields
+	// toggle visibility of optional Biz Ops write fields
 	const submitButton = form.querySelector('#submitRunbookForm');
 	const runbookContent = form.querySelector('#content');
 	const choiceForm = form.querySelector('#import-or-manual');

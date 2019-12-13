@@ -20,7 +20,7 @@ const callExternalApi = async ({
 		body: JSON.stringify(payload),
 		headers,
 		agent: keepAliveAgent,
-		timeout: 2000,
+		timeout: 15000,
 	};
 	const event = `${name}_${method}`;
 	const logger = lambdaLogger.child({ event, url });

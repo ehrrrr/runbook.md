@@ -28,13 +28,13 @@ const postIssue = ({
 	const title = `${ISSUE_TITLE}${
 		NODE_ENV === 'production' ? '' : ' (staging)'
 	}`;
-	const body = `# There was an error synchronising runbooks with Biz-Ops
+	const body = `# There was an error synchronising runbooks with Biz Ops
 > :red_circle: ${errorCause}
 ## System code: [${systemCode}](${BIZ_OPS_URL}/System/${systemCode})
 
 * This operation was triggered by a production release: ${commitUrl}${author}.
-* You can find further details about what went wrong on [Splunk](https://financialtimes.splunkcloud.com/en-GB/app/search/search?q=search%20${splunkQuery}). 
-* You may **trigger the re-ingestion of any valid runbooks** via the associated [runbook.md check run](${checkRunUrl}). 
+* You can find further details about what went wrong on [Splunk](https://financialtimes.splunkcloud.com/en-GB/app/search/search?q=search%20${splunkQuery}).
+* You may **trigger the re-ingestion of any valid runbooks** via the associated [runbook.md check run](${checkRunUrl}).
 
 Please check the [most recent production runbook](${RUNBOOKS_URL}/${systemCode}) and alert Operations if any critical details are missing.
 

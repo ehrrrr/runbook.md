@@ -19,7 +19,7 @@ runbooks:
     # defaults to `any`
     failOn: any
 
-    # an array of paths to exclude from processing (and Biz-Ops updates, if enabled)
+    # an array of paths to exclude from processing (and Biz Ops updates, if enabled)
     # wrap paths in single quotes
     # RegExp strings supported (prefixed rx:), see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
     exclude:
@@ -27,18 +27,18 @@ runbooks:
 
     ### SUPPORT FOR UPDATING BIZ-OPS
 
-    # Update valid Biz-Ops runbooks on merge to a specific branch
+    # Update valid Biz Ops runbooks on merge to a specific branch
     #### IF YOUR DEPLOYMENTS ARE AUTOMATED (CircleCI, Heroku Pipelines)
     #### PLEASE INTEGRATE WITH CHANGE-API INSTEAD
     #### https://github.com/Financial-Times/change-api#change-api---v2
     # defaults to `false`
     updateOnMerge: false
 
-    # Merges to this branch trigger Biz-Ops updates updateOnMerge is `true`
+    # Merges to this branch trigger Biz Ops updates updateOnMerge is `true`
     # defaults to `master`
     updateBranch: master
 
-    # an array of paths to exclude from Biz-Ops updates (runbooks are still processed)
+    # an array of paths to exclude from Biz Ops updates (runbooks are still processed)
     # wrap paths in single quotes
     # RegExp strings supported (prefixed rx:), see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
     excludeFromUpdate:

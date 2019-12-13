@@ -117,22 +117,28 @@ class IngestSummariser extends RunbookGatherer {
 		const { emoji, status } = this.getStateDescriptors(state);
 		const statusUrl = this.runbookMdUrl(sha);
 
-		let reingestCopy = `**Ingest trigger disabled** – no system code found. Please specify a valid system code in this runbook's contents, filename, or in the repository config for runbook.md.`;
-		if (isStringNotEmpty(systemCode)) {
-			try {
-				await checkSystemCodeExists(systemCode);
-				const reingestUrl = this.runbookMdUrl(sha, 'reingest');
-				reingestCopy = `[**Trigger ingest »**](${reingestUrl}) – :warning: this will update the system **${systemCode}** in Biz-Ops`;
-			} catch (error) {
-				this.logger.warn({
-					event: 'SYSTEM_CODE_NOT_FOUND',
-					sha,
-					path,
-					systemCode,
-					error,
-				});
+		const getReingestCopy = async () => {
+			let reingestCopy = `**Ingest trigger disabled** – Runbooks which specify a **code** field can be manually reingested into Biz Ops via a button on this page.`;
+			if (isStringNotEmpty(systemCode)) {
+				try {
+					await checkSystemCodeExists(systemCode);
+					const reingestUrl = this.runbookMdUrl(sha, 'reingest');
+					reingestCopy = `[**Trigger ingest »**](${reingestUrl}) – :warning: this will update the system **${systemCode}** in Biz Ops`;
+				} catch (error) {
+					reingestCopy = `**Ingest trigger disabled** – Runbook specifies an invalid system code in its **code** field. Check **${systemCode}** exists in Biz Ops.`;
+					this.logger.warn({
+						event: 'SYSTEM_CODE_NOT_FOUND',
+						sha,
+						path,
+						systemCode,
+						error,
+					});
+				}
 			}
-		}
+			return reingestCopy;
+		};
+
+		const rerunCopy = `If you think something went wrong with this validation run of your runbook, you can recommit to the branch (can be an empty commit) to trigger another run.`;
 
 		return [
 			`## ${path}  \n`,
@@ -147,10 +153,13 @@ class IngestSummariser extends RunbookGatherer {
 			count.parsed && `* **${count.parsed}** facets parsed successfully`,
 			// validation errors
 			count.invalid && `* **${count.invalid}** invalid facets`,
-			// fields updated in Biz-Ops
-			count.updated && `* **${count.updated}** fields updated in Biz-Ops`,
-			// fields updated in Biz-Ops
-			state === 'success' && `\n -------------- \n${reingestCopy}`,
+			// fields updated in Biz Ops
+			count.updated && `* **${count.updated}** fields updated in Biz Ops`,
+			'\n -------------- \n',
+			// fields updated in Biz Ops
+			state === 'success' && (await getReingestCopy()),
+			`\n`,
+			rerunCopy,
 		]
 			.filter(line => !!line)
 			.join('  \n');

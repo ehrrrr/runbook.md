@@ -60,10 +60,10 @@ const ingest = async payload => {
 	const systemCode = parseData.code || payload.systemCode;
 	const commonResponseProperties = { systemCode, details };
 
-	// 2. if we don't need to update Biz-Ops, we are done
+	// 2. if we don't need to update Biz Ops, we are done
 	if (!shouldWriteToBizOps || shouldWriteToBizOps === 'no') {
 		return {
-			message: 'Parse & validation complete. Biz-Ops update skipped.',
+			message: 'Parse & validation complete. Biz Ops update skipped.',
 			code: 'parse-ok-update-skipped',
 			...commonResponseProperties,
 		};
@@ -76,16 +76,16 @@ const ingest = async payload => {
 			commonResponseProperties,
 		);
 	}
-	// and a valid API key for Biz-Ops
+	// and a valid API key for Biz Ops
 	if (!bizOpsApiKey) {
 		throw ingestError('parse-ok-apiKey-missing', commonResponseProperties);
 	}
 
-	// 3. check if the system code exists in Biz-Ops
+	// 3. check if the system code exists in Biz Ops
 	// to avoid creating new systems
 	await checkSystemCodeExists(systemCode, details);
 
-	// 4. update Biz-Ops
+	// 4. update Biz Ops
 	const { status, json: writeResult } = await updateBizOps(
 		bizOpsApiKey,
 		systemCode,
@@ -99,7 +99,7 @@ const ingest = async payload => {
 		});
 	}
 
-	// 5. update the system's repository in Biz-Ops
+	// 5. update the system's repository in Biz Ops
 	// this shouldn't fail the ingest
 	let updateSystemRepositoryResult;
 	try {
@@ -122,7 +122,7 @@ const ingest = async payload => {
 	return {
 		status,
 		systemCode,
-		message: `Parse & validation complete. Biz-Ops update successful.`,
+		message: `Parse & validation complete. Biz Ops update successful.`,
 		code: 'parse-ok-update-ok',
 		details,
 	};
