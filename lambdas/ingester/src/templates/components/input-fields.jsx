@@ -37,7 +37,7 @@ const RunbookImport = ({ content, systemCode, systemCodeExists }) => {
 		<label className="o-forms-field" id="import-or-manual">
 			<span className="o-forms-title">
 				<span htmlFor="system-code" className="o-forms__label">
-					Enter an <b>existing</b> system code to import a runbook.md
+					Enter an <b>existing</b> system code to create a runbook.md
 					from Biz Ops data.{' '}
 					{systemCode &&
 						(systemCodeExists
@@ -54,7 +54,7 @@ const RunbookImport = ({ content, systemCode, systemCodeExists }) => {
 					type="button"
 					className="o-buttons o-buttons--primary"
 				>
-					Import
+					Create
 				</button>
 			</span>
 			<span className="o-forms-title">

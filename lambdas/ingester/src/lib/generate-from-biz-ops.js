@@ -91,8 +91,6 @@ exports.generate = async systemCode => {
 # ${data.name || '<!-- Enter a name  -->'}
 
 ${data.description || '<!-- Enter a description  -->'}`;
-	delete data.name;
-	delete data.description;
 
 	const outputValue = ({
 		name,
@@ -149,6 +147,7 @@ ${description}
 
 	const md = `${preamble}
 ${fields
+	.filter(({ name }) => !['code', 'name', 'description'].includes(name))
 	.map(
 		field => `
 ## ${uncamelCase(field.name)}
