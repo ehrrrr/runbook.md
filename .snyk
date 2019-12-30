@@ -23,9 +23,9 @@ ignore:
   SNYK-JS-HANDLEBARS-534478:
     - probot > hbs > handlebars:
         reason: No fix
-        expires: '2019-12-21T14:39:08.493Z'
+        expires: '2020-01-29T15:52:44.300Z'
   SNYK-JS-HANDLEBARS-534988:
     - probot > hbs > handlebars:
         reason: No fix
-        expires: '2019-12-21T14:39:08.493Z'
+        expires: '2020-01-29T15:52:44.300Z'
 patch: {}
