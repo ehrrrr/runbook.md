@@ -94,28 +94,31 @@ ${data.description || '<!-- Enter a description  -->'}`;
 
 	const outputValue = ({
 		name,
-		isRelationship,
+		relationship,
 		hasMany,
 		type,
 		description,
 	}) => {
-		if (data[name] !== null) {
+		if (
+			data[name] !== null &&
+			!(Array.isArray(data[name]) && data[name].length === 0)
+		) {
 			if (type === 'Boolean') {
 				return data[name] ? 'Yes' : 'No';
 			}
 
-			if (isRelationship && hasMany) {
+			if (relationship && hasMany) {
 				return data[name].map(({ code }) => `- ${code}`).join('\n');
 			}
 
-			if (isRelationship) {
+			if (relationship) {
 				return data[name].code;
 			}
 
 			return data[name];
 		}
 
-		if (isRelationship) {
+		if (relationship) {
 			return `<!--
 ${
 	hasMany
