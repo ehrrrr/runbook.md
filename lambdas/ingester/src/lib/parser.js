@@ -1,4 +1,30 @@
-const runbookMd = require('../../../../libraries/parser');
-const schema = require('./get-configured-schema');
+const markdownParser = require('@financial-times/tc-markdown-parser');
 
-module.exports = runbookMd(schema);
+const blacklistPropertyNames = [
+	'lastReleaseTimestamp',
+	'dependentCapabilities',
+	'dependentProducts',
+	'dependents',
+	'lastServiceReviewDate',
+	'lastSOSReport',
+	'piiSources',
+	'recursiveDependencies',
+	'recursiveDependentProducts',
+	'recursiveDependents',
+	'replacedBy',
+	'repositories',
+	'SF_ID',
+	'sosTrafficLight',
+	'stakeholders',
+	'updatesData',
+	'dataOwner',
+	'gdprRetentionProcess',
+	'gdprErasureProcess',
+];
+
+module.excludedProperties = blacklistPropertyNames;
+
+module.exports = markdownParser.getParser({
+	type: 'System',
+	blacklistPropertyNames,
+});

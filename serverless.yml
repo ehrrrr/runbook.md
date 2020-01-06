@@ -7,7 +7,7 @@ provider:
     systemCode: ${self:service}
     teamDL: reliability.engineering@ft.com
     environment: ${env:ENVIRONMENT_TAG}
-  runtime: nodejs10.x
+  runtime: nodejs12.x
   stage: ${opt:stage, 'test'}
   region: eu-west-1
   role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/FTApplicationRoleFor_biz-ops-runbook-md

@@ -20,7 +20,7 @@ const parseAndValidate = async rawRunbook => {
 	const {
 		data: parseData,
 		errors: parseErrors,
-	} = await RunbookMd.parseRunbookString(content);
+	} = await RunbookMd.parseMarkdownString(content);
 	// comments are stripped, so adjust the line count
 	if (parseErrors) {
 		setActualLineNumber(rawRunbook, content, parseErrors);

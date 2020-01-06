@@ -1,6 +1,6 @@
 const schema = require('@financial-times/tc-schema-sdk');
 const { graphql } = require('./biz-ops-client');
-const runbookMd = require('../../../../libraries/parser');
+const { excludedProperties } = require('./parser');
 const {
 	checkSystemCodeExists,
 } = require('../commands/ingest/system-code-check');
@@ -42,8 +42,6 @@ const uncamelCase = str =>
 exports.generate = async systemCode => {
 	// this will throw if the systemCode is not in Biz Ops
 	await checkSystemCodeExists(systemCode);
-
-	const { excludedProperties } = runbookMd(schema);
 
 	const systemSchema = schema.getType('System', { groupProperties: true });
 

@@ -1,3 +1,7 @@
+const schema = require('../../../common/test/biz-ops-schema');
+
+jest.doMock('@financial-times/tc-schema-sdk', () => schema);
+
 jest.mock('../src/lib/external-apis');
 jest.mock('../src/commands/ingest/code-validation');
 jest.mock('../src/lib/biz-ops-client');
@@ -6,7 +10,6 @@ const runbookMd = require('../src/lib/parser');
 const externalApis = require('../src/lib/external-apis');
 const bizOpsValidation = require('../src/commands/ingest/code-validation');
 const bizOpsClient = require('../src/lib/biz-ops-client');
-
 const { ingest } = require('../src/commands/ingest');
 
 const payload = {
@@ -27,7 +30,7 @@ describe('ingest command', () => {
 			result = error;
 			result.rejected = true;
 		}
-		const { data } = await runbookMd.parseRunbookString(payload.content);
+		const { data } = await runbookMd.parseMarkdownString(payload.content);
 		return { result, parseData: data };
 	};
 

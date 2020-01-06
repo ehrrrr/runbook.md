@@ -1,5 +1,5 @@
 module.exports = {
-	roots: ['./lambdas', './libraries'],
+	roots: ['./lambdas'],
 	testPathIgnorePatterns: ['/bower_components/', '/node_modules/'],
 	setupFiles: ['<rootDir>/common/test/setup.js'],
 	moduleNameMapper: {
