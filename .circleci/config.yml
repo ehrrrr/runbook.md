@@ -26,13 +26,13 @@ commands:
                   command: make prod-env
 
 references:
-    npm_cache_key: &npm_cache_key v4-dependency-npm-{{ checksum "package-lock.json" }}
+    npm_cache_key: &npm_cache_key v5-dependency-npm-{{ checksum "package-lock.json" }}
 
     restore_node_modules: &restore_node_modules
         restore_cache:
             keys:
                 - *npm_cache_key
-                - v4-dependency-npm-
+                - v5-dependency-npm-
 
     cache_node_modules: &cache_node_modules
         save_cache:
