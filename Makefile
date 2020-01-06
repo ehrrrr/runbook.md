@@ -111,3 +111,12 @@ create-database:
 	Key=systemCode,Value=biz-ops-runbook-md \
 	Key=environment,Value=$$ENVIRONMENT_TAG \
 	Key=teamDL,Value=reliability.engineering@ft.com
+
+# Documentation
+DIAGRAMS_DIR = ./docs/flow
+regenerate-diagrams:
+	$(foreach file, $(wildcard $(DIAGRAMS_DIR)/*.md), mmdc -i $(file) -o $(file).svg;)
+	# for file in "./docs/flow/*"; do \
+    #     echo "Hello" $${file} ; \
+    # done;
+	#mmdc -i flow/webhook.mmd -o flow/webhook.png
