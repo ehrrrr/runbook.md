@@ -41,8 +41,9 @@ const pushUnique = (accumulator, valuesToAdd) => {
 	});
 };
 
-const getTypesAndCodesFromRelationships = (systemSchema, data) =>
-	Object.entries(data).reduce((accumulator, [property, value]) => {
+const getTypesAndCodesFromRelationships = (systemSchema, data) => {
+	console.warn("DEBUG",data);
+	return Object.entries(data).reduce((accumulator, [property, value]) => {
 		const { type, isRelationship } = systemSchema.properties[property];
 		if (isRelationship) {
 			if (typeof value === 'string') {
@@ -56,6 +57,7 @@ const getTypesAndCodesFromRelationships = (systemSchema, data) =>
 		}
 		return accumulator;
 	}, []);
+};
 
 const sanitisedKey = (type, code) =>
 	`${type}_${code.replace(/[-,]/g, '_').replace(/\W/g, '')}`;
