@@ -42,7 +42,7 @@ const pushUnique = (accumulator, valuesToAdd) => {
 };
 
 const getTypesAndCodesFromRelationships = (systemSchema, data) => {
-	console.warn("DEBUG",data);
+	console.log("DEBUG",data);
 	return Object.entries(data).reduce((accumulator, [property, value]) => {
 		const { type, isRelationship } = systemSchema.properties[property];
 		if (isRelationship) {
