@@ -41,18 +41,18 @@ const pushUnique = (accumulator, valuesToAdd) => {
 	});
 };
 
+function generateListOfNodes(type, value) {
+	if (Array.isArray(value)) {
+		return value.flatMap(element => generateListOfNodes(type, element));
+	}
+	return [{ type, code: value.code || value }];
+}
+
 const getTypesAndCodesFromRelationships = (systemSchema, data) =>
 	Object.entries(data).reduce((accumulator, [property, value]) => {
 		const { type, isRelationship } = systemSchema.properties[property];
-		if (isRelationship) {
-			if (typeof value === 'string') {
-				pushUnique(accumulator, [{ type, code: value }]);
-			} else {
-				pushUnique(
-					accumulator,
-					value.map(code => ({ type, code })),
-				);
-			}
+		if (isRelationship && value) {
+			pushUnique(accumulator, generateListOfNodes(type, value));
 		}
 		return accumulator;
 	}, []);
@@ -93,20 +93,20 @@ const formatBizOpsResponse = (bizOpsResponse, propertyMappings) => {
 	return { bizOpsData, errors };
 };
 
+function matchBizOpsData(bizOpsData, type, value) {
+	if (Array.isArray(value)) {
+		return value.map(element => matchBizOpsData(bizOpsData, type, element));
+	}
+	return bizOpsData[sanitisedKey(type, value.code || value)];
+}
+
 const replaceCodesWithData = (systemSchema, data, bizOpsData) => {
 	const expandedData = {};
 	Object.entries(data).forEach(([property, value]) => {
+		expandedData[property] = value;
 		const { type, isRelationship } = systemSchema.properties[property];
-		if (isRelationship) {
-			if (typeof value === 'string') {
-				expandedData[property] = bizOpsData[sanitisedKey(type, value)];
-			} else {
-				expandedData[property] = value.map(
-					code => bizOpsData[sanitisedKey(type, code)],
-				);
-			}
-		} else {
-			expandedData[property] = value;
+		if (isRelationship && value) {
+			expandedData[property] = matchBizOpsData(bizOpsData, type, value);
 		}
 	});
 	return expandedData;
