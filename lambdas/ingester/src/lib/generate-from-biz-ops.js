@@ -58,7 +58,7 @@ exports.generate = async systemCode => {
 		)
 		.filter(({ type }) => !isForbiddenType(type))
 		.filter(({ name }) =>
-			[...systemSchema.minimumViableRecord]
+			[...(systemSchema.minimumViableRecord || [])]
 				.concat(desirableFields)
 				.includes(name),
 		)
