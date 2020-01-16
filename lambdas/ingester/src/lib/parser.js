@@ -22,9 +22,9 @@ const blacklistPropertyNames = [
 	'gdprErasureProcess',
 ];
 
-module.excludedProperties = blacklistPropertyNames;
-
 module.exports = markdownParser.getParser({
 	type: 'System',
 	blacklistPropertyNames,
 });
+
+module.exports.excludedProperties = blacklistPropertyNames;

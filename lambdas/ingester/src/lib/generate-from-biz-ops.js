@@ -44,7 +44,6 @@ exports.generate = async systemCode => {
 	await checkSystemCodeExists(systemCode);
 
 	const systemSchema = schema.getType('System', { groupProperties: true });
-
 	const enums = schema.getEnums();
 
 	// eslint-disable-next-line unicorn/prefer-flat-map
@@ -59,7 +58,7 @@ exports.generate = async systemCode => {
 		)
 		.filter(({ type }) => !isForbiddenType(type))
 		.filter(({ name }) =>
-			[...systemSchema.minimumViableRecord]
+			[...(systemSchema.minimumViableRecord || [])]
 				.concat(desirableFields)
 				.includes(name),
 		)
@@ -67,7 +66,6 @@ exports.generate = async systemCode => {
 			({ name, deprecationReason }) =>
 				!deprecationReason && !excludedProperties.includes(name),
 		);
-
 	const {
 		data: { System: data },
 	} = await graphql(
