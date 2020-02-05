@@ -1,6 +1,7 @@
 const { h } = require('hyperons');
 
-const List = ({ itemArray }) => itemArray.map(({ code }) => <li>{code}</li>);
+const List = ({ itemArray }) =>
+	itemArray.map(item => <li>{item.code || item}</li>);
 
 const Cell = ({ contents, props = {} }) => {
 	if (Array.isArray(contents)) {
