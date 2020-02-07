@@ -84,7 +84,6 @@ class RunbookProcessor extends RunbookSourcer {
 			state: 'success',
 			...runbook,
 		};
-
 		try {
 			const response = await ingest(payload);
 			childLogger.info({

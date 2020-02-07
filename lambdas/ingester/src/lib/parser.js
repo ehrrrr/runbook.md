@@ -20,6 +20,7 @@ const blacklistPropertyNames = [
 	'dataOwner',
 	'gdprRetentionProcess',
 	'gdprErasureProcess',
+	'runbookMdUrl',
 ];
 
 module.exports = markdownParser.getParser({

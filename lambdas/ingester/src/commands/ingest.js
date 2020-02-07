@@ -51,6 +51,7 @@ const ingest = async payload => {
 		shouldWriteToBizOps,
 		bizOpsApiKey,
 		repository,
+		path,
 		details = await parseAndValidate(payload.content),
 	} = payload;
 
@@ -85,7 +86,10 @@ const ingest = async payload => {
 	// to avoid creating new systems
 	await checkSystemCodeExists(systemCode, details);
 
-	// 4. update Biz Ops
+	// 4. Save a url back to the runbook.md file, so we can link to it
+	details.runbookMdUrl = `https://github.com/${repository}/blob/master/${path}`;
+
+	// 5. update Biz Ops
 	const { status, json: writeResult } = await updateBizOps(
 		bizOpsApiKey,
 		systemCode,
@@ -99,7 +103,7 @@ const ingest = async payload => {
 		});
 	}
 
-	// 5. update the system's repository in Biz Ops
+	// 6. update the system's repository in Biz Ops
 	// this shouldn't fail the ingest
 	let updateSystemRepositoryResult;
 	try {
