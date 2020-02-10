@@ -107,6 +107,7 @@ const ingestRunbook = async (
 		repository,
 		details,
 		childLogger,
+		path,
 		// the properties below are only used to post Github issue
 		commit,
 		githubName,
@@ -126,6 +127,7 @@ const ingestRunbook = async (
 			repository,
 			systemCode,
 			details,
+			path,
 		});
 
 		const { status, message } = result;
