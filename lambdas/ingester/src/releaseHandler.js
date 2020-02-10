@@ -69,11 +69,12 @@ const fetchRunbooksByCommit = async (
 			await sleep(THROTTLE_MILLISECONDS);
 		}
 
-		return runbooks.map(({ details, systemCode }) => ({
+		return runbooks.map(({ details, systemCode, path }) => ({
 			checkRunUrl,
 			commit,
 			repository,
 			githubName,
+			path,
 			details,
 			systemCode:
 				(details.parseData && details.parseData.code) ||
