@@ -87,7 +87,7 @@ const ingest = async payload => {
 	await checkSystemCodeExists(systemCode, details);
 
 	// 4. Save a url back to the runbook.md file, so we can link to it
-	details.runbookMdUrl = `https://github.com/${repository}/blob/master/${path}`;
+	details.parseData.runbookMdUrl = `https://github.com/${repository}/blob/master/${path}`;
 
 	// 5. update Biz Ops
 	const { status, json: writeResult } = await updateBizOps(

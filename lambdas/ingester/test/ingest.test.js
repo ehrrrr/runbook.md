@@ -18,6 +18,7 @@ const payload = {
 	bizOpsApiKey: 'dummyKey',
 	content: '# this is a name\ndescription\n## service tier\nbronze',
 	repository: 'Financial-Times/runbook.md',
+	path: 'test-runbook.md',
 };
 
 describe('ingest command', () => {
@@ -66,12 +67,17 @@ describe('ingest command', () => {
 			expect(spies.transformCodesIntoNestedData).toHaveBeenCalled();
 			expect(spies.validate).toHaveBeenCalled();
 			expect(spies.bizOpsClient).toHaveBeenCalled();
+
 			expect(spies.updateBizOps).toHaveBeenCalled();
 			expect(spies.updateSystemRepository).toHaveBeenCalled();
 			expect(result).toMatchObject({
 				code: expect.stringMatching('parse-ok-update-ok'),
 				details: {
-					parseData,
+					parseData: {
+						...parseData,
+						runbookMdUrl:
+							'https://github.com/Financial-Times/runbook.md/blob/master/test-runbook.md',
+					},
 				},
 			});
 		});
