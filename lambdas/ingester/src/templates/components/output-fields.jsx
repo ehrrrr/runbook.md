@@ -1,6 +1,7 @@
 const { h } = require('hyperons');
 const addLineNumbers = require('add-line-numbers');
 const { Table } = require('./table');
+const { excludedProperties } = require('../../lib/parser');
 
 exports.Message = ({ alertState, message, linkText, linkUrl }) => (
 	<div
@@ -72,13 +73,20 @@ exports.ValidationErrors = ({ errors }) => {
 	const tableProps = {
 		caption: 'What to improve',
 		columns: ['Facet', 'Errors'],
-		rows: Object.entries(errors).map(([facet, messages]) => [
-			facet,
-			{
-				props: { className: 'with-line-breaks' },
-				value: messages,
-			},
-		]),
+		rows: Object.entries(errors).map(([facet, messages]) => {
+			if (excludedProperties.includes(facet)) {
+				messages.push(
+					"Note that, in order to prevent this system's runbook blocking edits by other systems, this must be fixed by editing in https://biz-ops.in.ft.com, not by adding a field to your RUNBOOK.md.",
+				);
+			}
+			return [
+				facet,
+				{
+					props: { className: 'with-line-breaks' },
+					value: messages,
+				},
+			];
+		}),
 	};
 	return (
 		<div className="validation-errors">
