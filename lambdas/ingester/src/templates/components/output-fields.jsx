@@ -76,7 +76,7 @@ exports.ValidationErrors = ({ errors }) => {
 		rows: Object.entries(errors).map(([facet, messages]) => {
 			if (excludedProperties.includes(facet)) {
 				messages.push(
-					"Note that, in order to prevent this system's runbook blocking edits by other systems, this must be fixed by editing in https://biz-ops.in.ft.com, not by adding a field to your RUNBOOK.md.",
+					'No action required. This field needs to be manually added via Biz Ops UI because other systems or teams may want to edit it too.',
 				);
 			}
 			return [
