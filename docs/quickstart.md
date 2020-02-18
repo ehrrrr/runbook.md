@@ -35,6 +35,8 @@ There are 2 tools for validating the runbook content.
 -   The [RUNBOOK.md generator](https://biz-ops.in.ft.com/runbook.md) has a form for manually running your content through the RUNBOOK.md app to validate it.
 -   All PRs in the main FT account run a RUNBOOK.md check, and results will be reported on the PR.
 
+![image](https://user-images.githubusercontent.com/447559/74748217-10c67100-5260-11ea-9d43-0000d12b38c6.png)
+
 There are 2 types of validation:
 
 -   Parse, which will complain if any fields contains invalid content

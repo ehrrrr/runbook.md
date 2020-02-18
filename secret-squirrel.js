@@ -6,6 +6,7 @@ module.exports = {
 	strings: {
 		deny: [],
 		denyOverrides: [
+			'10c67100-5260-11ea-9d43-0000d12b38c6', // screenshot of github app in quickstart
 			'8d4f6780-b53b-11e9-946b-49292d32f12d', // README.md:24
 			'b62f4580-81f6-11e9-8f9b-7d694d159e85', // README.md:34
 			'cc02e6d3-5b7d-4859-b17e-a051e8a068a5', // lambdas/ingester/test/fixtures/runbook-fixture.md:107
