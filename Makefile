@@ -75,7 +75,7 @@ run-local-stream-container:
 	# see https://docs.docker.com/engine/reference/commandline/ps/
 	@if [ -z "$(shell docker ps -q -f name=^/localstreams$)" ]; then \
 		if [ "$(shell docker ps -aq -f status=exited -f name=^/localstreams$)" ]; then \
-			docker rm localstreams; \
+			docker rm localstreams --force; \
 		fi; \
 		docker run -d --name localstreams -p 4567:4567 instructure/kinesalite; \
 	fi;
@@ -91,9 +91,9 @@ emulate-local-kinesis-stream:
 run-local-message-stream: run-local-stream-container emulate-local-kinesis-stream
 
 delete-local-stream:
-	aws kinesis delete-stream --stream-name change-request-api-test-enriched-stream
+	aws kinesis delete-stream --region eu-west-1 --stream-name change-request-api-test-enriched-stream
 
-send-message-to-local-stream: 
+send-message-to-local-stream:
 	aws kinesis --endpoint-url http://localhost:4567 \
 	put-record --stream-name change-request-api-test-enriched-stream \
 	--partition-key “MyFirstMessage” \
