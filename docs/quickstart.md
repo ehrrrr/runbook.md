@@ -46,7 +46,7 @@ Parse failures prevent publishing to Biz Ops, but SOS failures don't.
 
 ### Full automation
 
-If you have a fully automated release process, you will need to integrate your project with the [Change API](https://github.com/Financial-Times/change-api/blob/master/docs/API_DEFINITION.md), sending change logs for every system whose code lives in the repository. This will automatically ingest the RUNBOOK.md from the production branch/tag into Biz Ops. This also works for the scenario where the repository contains runbooks for multiple systems.
+If you have a fully automated release process, you will need to integrate your project with the [Change API](https://github.com/Financial-Times/change-api/blob/master/docs/API_DEFINITION.md), sending change logs for every system whose code lives in the repository. This will automatically ingest the RUNBOOK.md (if parsing is successful) from the production branch/tag into Biz Ops. This also works for the scenario where the repository contains runbooks for multiple systems.
 
 ### Manual step
 
