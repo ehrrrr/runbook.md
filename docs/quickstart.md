@@ -16,7 +16,7 @@ A summary of the format is as follows
 -   The paragraph under the h1 is the system description. It may contain markdown, but should only be a single paragraph.
 -   Any h2’s define field names, and the content beneath them is the value to store in that field.
 -   Any fields that refer to relationships between records must either contain a single valid code (usually a system code or team code) from Biz Ops, or a markdown list of codes.
--   Any fields that contain ‘subdocument’ blocks of text e.g troubleshooting docs, must not contain any headers stronger than h3
+-   Any fields that contain ‘subdocument’ blocks of text e.g troubleshooting docs, must not contain any headers stronger than h3.
 
 There is a little bit more to it than that, but the points above will be enough to get you started.
 
