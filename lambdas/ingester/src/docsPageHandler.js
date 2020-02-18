@@ -1,9 +1,11 @@
-const fs = require('fs').promises;
-const path = require('path');
 const showdown = require('showdown');
 const { createLambda } = require('./lib/lambda');
 const response = require('./lib/response');
 const template = require('./templates/docs-page');
+
+const pages = {
+	quickstart: require('../../../docs/quickstart.md'), // eslint-disable-line global-require
+};
 
 showdown.setFlavor('github');
 const markdownParser = new showdown.Converter({
@@ -12,10 +14,7 @@ const markdownParser = new showdown.Converter({
 
 const index = async event => {
 	const { page } = event.pathParameters;
-	const content = await fs.readFile(
-		path.join(process.cwd(), `docs/${page}.md`),
-		'utf8',
-	);
+	const content = pages[page].default;
 
 	return response.renderPage(
 		template,
