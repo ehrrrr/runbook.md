@@ -107,17 +107,17 @@ functions:
       - http:
           path: /runbook.md
           method: post
-  # release:
-  #   description: Apply runbook.md changes on prod release (probot app)
-  #   handler: lambdas/ingester/src/releaseHandler.handler
-  #   timeout: 30
-  #   events:
-  #     - stream:
-  #         type: kinesis
-  #         batchSize: 1
-  #         arn: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-${env:ENVIRONMENT}-enriched-stream
-  #         startingPosition: TRIM_HORIZON
-  #         enabled: true
+  release:
+    description: Apply runbook.md changes on prod release (probot app)
+    handler: lambdas/ingester/src/releaseHandler.handler
+    timeout: 30
+    events:
+      - stream:
+          type: kinesis
+          batchSize: 1
+          arn: arn:aws:kinesis:eu-west-1:${env:AWS_ACCOUNT_ID}:stream/change-request-api-${env:ENVIRONMENT}-enriched-stream
+          startingPosition: TRIM_HORIZON
+          enabled: true
   status:
     description: Status page for GitHub checks
     handler: lambdas/ingester/src/statusPageHandler.handler
