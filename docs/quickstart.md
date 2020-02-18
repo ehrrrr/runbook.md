@@ -37,7 +37,7 @@ There are 2 tools for validating the runbook content.
 
 There are 2 types of validation:
 
--   Parse, which will complain if any fields contain invalid content
+-   Parse, which will complain if any fields contains invalid content
 -   SOS, which scores your runbook against [System Operability Score](https://sos.in.ft.com) rules to verify the content meets basic minimum standards
 
 Parse failures prevent publishing to Biz Ops, but SOS failures don't.
