@@ -12,13 +12,10 @@ const markdownParser = new showdown.Converter({
 
 const index = async event => {
 	const { page } = event.pathParameters;
-	console.log(page, path.join(process.cwd(), `docs/${page}.md`));
 	const content = await fs.readFile(
 		path.join(process.cwd(), `docs/${page}.md`),
 		'utf8',
 	);
-
-	console.log(page, content);
 
 	return response.renderPage(
 		template,

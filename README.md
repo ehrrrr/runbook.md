@@ -2,6 +2,8 @@
 
 runbook.md is a toolchain for improving the quality of runbooks across the business, and ensuring consistency of the information contained within runbooks with [biz-ops](https://biz-ops.in.ft.com/) – the knowledge base which models our business operations.
 
+[Quickstart](https://biz-ops.in.ft.com/runbook.md/docs/quickstart)
+
 Talk to us in the [#reliability-eng](https://financialtimes.slack.com/archives/C07B3043U) channel on Slack if you have any questions / suggestions.
 
 ## Toolchain
@@ -31,10 +33,6 @@ For repositories containing source code for more than one system, please adhere 
 This utility allows manual upload of a RUNBOOK.md file for validation and [operability scoring](https://github.com/Financial-Times/system-operability-score). Optionally, the tool can be used to populate associated critical fields in Biz Ops based on the content of a _valid runbook_.
 
 See an example of the format/content of a RUNBOOK.md file [here](./docs/example-runbook.md).
-
-## System (business logic) overview
-
-![image](https://user-images.githubusercontent.com/447559/58543123-b62f4580-81f6-11e9-8f9b-7d694d159e85.png)
 
 ## Installation and development
 
