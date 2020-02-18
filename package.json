@@ -33,6 +33,7 @@
 				"node-fetch": "^2.6.0",
 				"probot": "^9.9.1",
 				"qs": "^6.9.1",
+				"showdown": "^1.9.1",
 				"source-map-support": "^0.5.16",
 				"strip-html-comments": "^1.0.0"
 		},

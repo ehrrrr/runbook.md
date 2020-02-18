@@ -35,7 +35,10 @@ const Header = () => {
 				<div className="o-header-services__top">
 					<div className="o-header-services__logo" />
 					<div className="o-header-services__title">
-						<a className="o-header-services__product-name" href="/">
+						<a
+							className="o-header-services__product-name"
+							href="/runbook.md"
+						>
 							RUNBOOK.md
 						</a>{' '}
 						<small>
@@ -52,10 +55,10 @@ const Header = () => {
 				>
 					<ul className="o-header-services__primary-nav-list">
 						<li>
-							<a href="/runbook.md">Parse, Validation & Import</a>
+							<a href="/runbook.md">RUNBOOK.md Generator</a>
 						</li>
 						<li>
-							<a href="/runbook.md/about">About</a>
+							<a href="/runbook.md/docs/quickstart">Quickstart</a>
 						</li>
 					</ul>
 				</nav>

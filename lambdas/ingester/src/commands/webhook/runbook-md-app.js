@@ -38,7 +38,7 @@ class RunbookMdApp extends IngestSummariser {
 							? 'Runbook Validator'
 							: 'Runbook.md Staging',
 					head_sha: this.sha,
-					details_url: `${BIZ_OPS_URL}/runbook.md/about`,
+					details_url: `${BIZ_OPS_URL}/runbook.md`,
 					status: 'completed',
 					conclusion,
 					completed_at: new Date(),
