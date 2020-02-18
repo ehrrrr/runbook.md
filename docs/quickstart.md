@@ -32,7 +32,7 @@ If a field is irrelevant to your system, delete both the html comment and the he
 
 There are 2 tools for validating the runbook content.
 
--   The [RUNBOOK.md generator](https://biz-ops.in.ft.com/runbook.md) has a form for manually running your content through the RUNBOOK.md app to validate it
+-   The [RUNBOOK.md generator](https://biz-ops.in.ft.com/runbook.md) has a form for manually running your content through the RUNBOOK.md app to validate it.
 -   All PRs in the main FT account run a RUNBOOK.md check, and results will be reported on the PR
 
 There are 2 types of validation:
