@@ -79,7 +79,7 @@ custom:
 
 functions:
   docs:
-    description: About page for the RUNBOOK.md project
+    description: Docs page for the RUNBOOK.md project
     handler: lambdas/ingester/src/docsPageHandler.handler
     timeout: 10
     memorySize: 512
