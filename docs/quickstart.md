@@ -20,15 +20,19 @@ A summary of the format is as follows
 
 There is a little bit more to it than that, but the points above will be enough to get you started.
 
-## 3. Generate your RUNBOOK.md content
+## 3. Invest some time adding relationships to your system
 
-Visit the [RUNBOOK.md generator](https://biz-ops.in.ft.com/runbook.md) to generate a RUNBOOK.md file from the existing content in Biz Ops.
+If you edit all the relationships to your system (e.g. ownership, dependencies) on the [Biz Ops site](https://biz-ops-in.ft.com) *before* using the RUNBOOK.md generator it will mean you get the benefit of using the autocomplete in the UI, and therefore won't have to be careful typing each system code, team code etc into your RUNBOOK.md manually.
 
-It will contain all the fields expected in a good runbook. If Biz Ops contains a value for this field, this value will be output by the generator. Otherwise there will be a html comment with some hints of what to enter.
+## 4. Generate your RUNBOOK.md content
+
+At the top of every system page in Biz Ops is a link to generate RUNBOOK.md file generated from existing Biz ops content. If you click it it will take you to a generated RUNBOOK.md file. (Alternatively, visit the [RUNBOOK.md generator](https://biz-ops.in.ft.com/runbook.md) directly).
+
+This generated file will contain all the fields expected in a good runbook. If Biz Ops contains a value for this field, this value will be output by the generator. Otherwise there will be a html comment with some hints of what to enter.
 
 If a field is irrelevant to your system, delete both the html comment and the heading above it, otherwise type in the appropriate information for this field.
 
-## 4. Validate your runbook's quality
+## 5. Validate your runbook's quality
 
 There are 2 tools for validating the runbook content.
 
@@ -44,7 +48,7 @@ There are 2 types of validation:
 
 Parse failures prevent publishing to Biz Ops, but SOS failures don't.
 
-## 5. Publish to Biz Ops
+## 6. Publish to Biz Ops
 
 ### Full automation
 
@@ -62,6 +66,6 @@ runbooks:
 
 [More options are available](https://github.com/Financial-Times/runbook.md/blob/master/docs/example-runbooks.yml) to fine tune runbook publishing.
 
-## 6. Check your content on https://runbooks.in.ft.com
+## 7. Check your content on https://runbooks.in.ft.com
 
 Hopefully there will be no issues, but if there are let us know in the [#reliability-eng](https://financialtimes.slack.com/archives/C07B3043U) slack channel.
