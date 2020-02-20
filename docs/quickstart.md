@@ -22,7 +22,7 @@ There is a little bit more to it than that, but the points above will be enough 
 
 ## 3. Invest some time adding relationships to your system
 
-If you edit all the relationships to your system (e.g. ownership, dependencies) on the [Biz Ops site](https://biz-ops-in.ft.com) *before* using the RUNBOOK.md generator it will mean you get the benefit of using the autocomplete in the UI, and therefore won't have to be careful typing each system code, team code etc into your RUNBOOK.md manually.
+If you edit all the relationships to your system (e.g. ownership, dependencies) on the [Biz Ops site](https://biz-ops-in.ft.com) _before_ using the RUNBOOK.md generator it will mean you get the benefit of using the autocomplete in the UI, and therefore won't have to be careful typing each system code, team code etc into your RUNBOOK.md manually.
 
 ## 4. Generate your RUNBOOK.md content
 
