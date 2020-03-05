@@ -20,8 +20,8 @@
 		"dependencies": {
 				"@financial-times/lambda-logger": "^2.0.4",
 				"@financial-times/s3o-lambda": "^2.0.3",
-				"@financial-times/tc-markdown-parser": "^0.3.11",
-				"@financial-times/tc-schema-sdk": "^0.3.11",
+				"@financial-times/tc-markdown-parser": "^0.4.0",
+				"@financial-times/tc-schema-sdk": "^0.4.0",
 				"@probot/serverless-lambda": "^0.4.0",
 				"add-line-numbers": "^1.0.1",
 				"http-errors": "^1.7.3",
