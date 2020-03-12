@@ -73,7 +73,6 @@ run-local-stream-container:
 	# first check if an exited container blocks (and remove it)
 	# then run the container with the kinesalite kinesis emulator
 	# see https://docs.docker.com/engine/reference/commandline/ps/
-	# docker ps -a | grep localstreams | awk '{print $1}' | xargs docker rm -f; \
 	@if [ -z "$(shell docker ps -q -f name=^/localstreams$)" ]; then \
 		if [ "$(shell docker ps -aq -f status=exited -f name=^/localstreams$)" ]; then \
 			docker rm localstreams --force; \
