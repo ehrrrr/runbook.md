@@ -1,6 +1,6 @@
 # Adding details to dependency relationships
 
-We have recently added support to adding additional information to dependency relationships.
+We have recently added support for adding additional information to dependency relationships.
 
 In RUNBOOK.md dependencies are specified as follows:
 
