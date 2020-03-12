@@ -29,7 +29,7 @@ To add these to your markdown file use a format very similar to YAML. The resili
 
 ## More generally
 
-This is the first example we've added to Biz Ops of adding properties directly onto relationships. This is a powerful addition to the graph model which you shoudl expect to see more of. The general pattern for adding these in RUNBOOK.md is
+This is the first example we've added to Biz Ops of adding properties directly onto relationships. This is a powerful addition to the graph model which you should expect to see more of. The general pattern for adding these in RUNBOOK.md is
 
 -   Put on the line immediately following the related record code.
 -   Indent by two spaces or one tab
