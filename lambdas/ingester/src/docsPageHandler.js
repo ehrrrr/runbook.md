@@ -5,6 +5,7 @@ const template = require('./templates/docs-page');
 
 const pages = {
 	quickstart: require('../../../docs/quickstart.md'), // eslint-disable-line global-require
+	'dependency-details': require('../../../docs/dependency-details.md'), // eslint-disable-line global-require
 };
 
 showdown.setFlavor('github');
