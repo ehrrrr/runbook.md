@@ -18,6 +18,7 @@ const desirableFields = [
 	'supportedBy',
 	'knownAboutBy',
 	'dependencies',
+	'monitoring',
 	'healthchecks',
 	'failoverArchitectureType',
 	'failoverProcessType',
