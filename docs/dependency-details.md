@@ -11,7 +11,7 @@ In RUNBOOK.md dependencies are specified as follows:
 -   biz-ops-schema
 ```
 
-They support adding 2 kinds of additional details:
+Now you can add 2 kinds of additional details:
 
 -   resiliencePatterns: one or more specific architectural patterns that can make a dependency more resilient. Choose from the list: Cache, DurableCache, GracefulDegradation, Replay, ManualFallback
 -   resilienceDetails: A free text field to explain more about how resilience is implemented
