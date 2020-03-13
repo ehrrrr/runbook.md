@@ -13,7 +13,7 @@ In RUNBOOK.md dependencies are specified as follows:
 
 You can also add 2 kinds of additional details:
 
--   resiliencePatterns: one or more specific architectural patterns that can make a dependency more resilient. Choose from the list: Cache, DurableCache, GracefulDegradation, Replay, ManualFallback
+-   `resiliencePatterns`: one or more specific architectural patterns that can make a dependency more resilient. Choose from the list: `Cache`, `DurableCache`, `GracefulDegradation`, `Replay`, `ManualFallback`
 -   resilienceDetails: A free text field to explain more about how resilience is implemented.
 
 To add these to your markdown file use a format very similar to YAML. The resiliencePatterns should be comma-separated (with or without whitespace). Adding them is optional (though if you have a dependency on a system of a lower service tier, it will improve your SOS score if you fill out the information). e.g.
