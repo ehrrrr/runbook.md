@@ -3,10 +3,12 @@ const { createLambda } = require('./lib/lambda');
 const response = require('./lib/response');
 const template = require('./templates/docs-page');
 
+/* eslint-disable global-require */
 const pages = {
-	quickstart: require('../../../docs/quickstart.md'), // eslint-disable-line global-require
-	'dependency-details': require('../../../docs/dependency-details.md'), // eslint-disable-line global-require
+	quickstart: require('../../../docs/quickstart.md'),
+	'dependency-details': require('../../../docs/dependency-details.md'),
 };
+/* eslint-enable global-require */
 
 showdown.setFlavor('github');
 const markdownParser = new showdown.Converter({
