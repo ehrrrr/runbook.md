@@ -8,6 +8,7 @@ const {
 const isForbiddenType = type => ['DateTime', 'Date', 'Time'].includes(type);
 
 const desirableFields = [
+	'serviceTier',
 	'primaryURL',
 	'replaces',
 	'hostPlatform',
